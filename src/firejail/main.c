@@ -420,7 +420,6 @@ static void run_cmd_and_exit(int i, int argc, char **argv) {
 			exit_err_feature("x11");
 	}
 #endif
-#ifdef HAVE_NETWORK
 	else if (strcmp(argv[i], "--nettrace") == 0) {
 		if (checkcfg(CFG_NETWORK)) {
 			if (getuid() != 0) {
@@ -524,8 +523,7 @@ static void run_cmd_and_exit(int i, int argc, char **argv) {
 		exit(0);
 	}
 
-
-
+#ifdef HAVE_NETWORK
 	else if (strncmp(argv[i], "--bandwidth=", 12) == 0) {
 		if (checkcfg(CFG_NETWORK)) {
 			logargs(argc, argv);
@@ -3217,9 +3215,14 @@ int main(int argc, char **argv, char **envp) {
 
 		gid_t g;
 		if (!arg_nogroups || !check_can_drop_all_groups()) {
-			// add audio group
+			// add audio groups
 			if (!arg_nosound) {
 				g = get_group_id("audio");
+				if (g) {
+					sprintf(ptr, "%d %d 1\n", g, g);
+					ptr += strlen(ptr);
+				}
+				g = get_group_id("pipewire");
 				if (g) {
 					sprintf(ptr, "%d %d 1\n", g, g);
 					ptr += strlen(ptr);

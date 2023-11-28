@@ -21,10 +21,16 @@ firejail (0.9.73) baseline; urgency=low
   * modif: Improve --version/--help & print version on startup (#5829)
   * modif: improve errExit error messages (#5871)
   * modif: drop deprecated 'shell' option references (#5894)
+  * modif: keep pipewire group unless nosound is used (#5992 #5993)
+  * modif: Lookup xauth in PATH (#6006 #6087)
   * bugfix: qutebrowser: links will not open in the existing instance (#5601
     #5618)
   * bugfix: fix --hostname and --hosts-file commands
   * bugfix: arp.c: ensure positive timeout on select(2) (#5806)
+  * bugfix: Wrong syscall names for s390_pci_mmio_read and s390_pci_mmio_write
+    (#5965 #5976)
+  * bugfix: firejail --ls reports wrong file sizes for large files (#5982
+    #6086)
   * build: auto-generate syntax files (#5627)
   * build: mark all phony targets as such (#5637)
   * build: mkdeb.sh: pass all arguments to ./configure (#5654)
@@ -43,6 +49,7 @@ firejail (0.9.73) baseline; urgency=low
   * build: firecfg.config sorting improvements (#5942)
   * build: codespell improvements (#5955)
   * build: add missing makefile dep & syntax improvements (#5956)
+  * build: sort.py: use case-sensitive sorting (#6070)
   * ci: always update the package db before installing packages (#5742)
   * ci: fix codeql unable to download its own bundle (#5783)
   * ci: split configure/build/install commands on gitlab (#5784)
@@ -52,6 +59,10 @@ firejail (0.9.73) baseline; urgency=low
   * ci: upgrade debian:stretch to debian:buster (#5818)
   * ci: standardize apt-get update/install & misc improvements (#5857)
   * ci: whitelist paths, reorganize workflows & speed-up tests (#5960)
+  * ci: fix dependabot duplicated workflow runs (#5984)
+  * ci: allow running workflows manually (#6026)
+  * contrib/syntax: remove 'text/plain' from firejail-profile.lang.in (#6057
+    #6059)
   * contrib/vim: match profile files more broadly (#5850)
   * test: split individual test groups in github workflows
   * test: add chroot, appimage and network tests in github workflows
@@ -62,6 +73,9 @@ firejail (0.9.73) baseline; urgency=low
   * docs: add uninstall instructions to README.md (#5812)
   * legal: selinux.c: Split Copyright notice & use same license as upstream
     (#5667)
+  * profiles: standardize commented code and eol comments (#5987)
+  * profiles: replace private-opt with whitelist & document private-opt issues
+    (#6021)
   * new profiles: fix-qdf, qpdf, zlib-flate, standard-notes, url-eater
  -- netblue30 <netblue30@yahoo.com>  Mon, 17 Jan 2023 09:00:00 -0500
 

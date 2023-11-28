@@ -3,7 +3,10 @@
 name: Build-extra
 
 on:
+  workflow_dispatch:
   push:
+    branches-ignore:
+      - 'dependabot/**'
     paths:
       - 'm4/**'
       - 'src/**.c'
@@ -40,7 +43,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -50,7 +53,7 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies

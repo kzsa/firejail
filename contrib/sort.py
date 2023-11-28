@@ -15,8 +15,8 @@ Usage: {path.basename(argv[0])} [/path/to/profile ...]
 
 The following commands are supported:
 
-    private-bin, private-etc, private-lib, caps.drop, caps.keep, seccomp.drop,
-    seccomp.drop, protocol
+    private-bin, private-etc, private-lib, caps.drop, caps.keep, seccomp,
+    seccomp.drop, seccomp.keep, protocol
 
 Note that this is only applicable to commands that support multiple arguments.
 
@@ -38,7 +38,7 @@ Exit Codes:
 
 def sort_alphabetical(original_items):
     items = original_items.split(",")
-    items.sort(key=str.casefold)
+    items.sort()
     return ",".join(items)
 
 

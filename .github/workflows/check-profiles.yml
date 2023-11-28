@@ -3,7 +3,10 @@
 name: Check-Profiles
 
 on:
+  workflow_dispatch:
   push:
+    branches-ignore:
+      - 'dependabot/**'
     paths:
       - 'ci/check/profiles/**'
       - 'etc/**'
@@ -28,14 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         disable-sudo: true
         egress-policy: block
         allowed-endpoints: >
           github.com:443
 
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
     - name: print env
       run: ./ci/printenv.sh
     - run: python3 --version

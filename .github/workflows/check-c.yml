@@ -3,7 +3,10 @@
 name: Check-C
 
 on:
+  workflow_dispatch:
   push:
+    branches-ignore:
+      - 'dependabot/**'
     paths:
       - 'm4/**'
       - 'src/**.c'
@@ -42,7 +45,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -52,7 +55,7 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
     - name: update package information
       run: sudo apt-get update -qy
     - name: install clang-tools-14 and dependencies
@@ -73,7 +76,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -83,7 +86,7 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
     - name: update package information
       run: sudo apt-get update -qy
     - name: install cppcheck
@@ -100,7 +103,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -111,7 +114,7 @@ jobs:
           ppa.launchpad.net:80
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
     - name: update package information
       run: sudo apt-get update -qy
     - name: install cppcheck
@@ -129,7 +132,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
       with:
         disable-sudo: true
         egress-policy: block
@@ -140,14 +143,14 @@ jobs:
           uploads.github.com:443
 
     - name: Checkout repository
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
     - name: print env
       run: ./ci/printenv.sh
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@5b6282e01c62d02e720b81eb8a51204f527c3624
+      uses: github/codeql-action/init@407ffafae6a767df3e0230c3df91b6443ae8df75
       with:
         languages: cpp
 
@@ -158,4 +161,4 @@ jobs:
       run: make -j "$(nproc)"
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@5b6282e01c62d02e720b81eb8a51204f527c3624
+      uses: github/codeql-action/analyze@407ffafae6a767df3e0230c3df91b6443ae8df75

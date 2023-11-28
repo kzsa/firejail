@@ -33,7 +33,8 @@ blacklist-nolog ${HOME}/.viminfo
 blacklist-nolog /tmp/clipmenu*
 
 # X11 session autostart
-# blacklist ${HOME}/.xpra - this will kill --x11=xpra cmdline option for all programs
+# this will kill --x11=xpra cmdline option for all programs
+#blacklist ${HOME}/.xpra
 blacklist ${HOME}/.Xsession
 blacklist ${HOME}/.blackbox
 blacklist ${HOME}/.config/autostart
@@ -191,6 +192,7 @@ blacklist ${HOME}/.VirtualBox
 blacklist ${HOME}/VirtualBox VMs
 
 # GNOME Boxes
+blacklist ${HOME}/.cache/gnome-boxes
 blacklist ${HOME}/.config/gnome-boxes
 blacklist ${HOME}/.local/share/gnome-boxes
 
@@ -241,8 +243,9 @@ blacklist /var/lib/mysql/mysql.sock
 blacklist /var/lib/mysqld/mysql.sock
 blacklist /var/lib/pacman
 blacklist /var/lib/upower
-# blacklist /var/log - a virtual /var/log directory (mostly empty) is build up by default for
-# every sandbox, unless --writable-var-log switch is activated
+# a virtual /var/log directory (mostly empty) is build up by default for every
+# sandbox, unless --writable-var-log switch is activated
+#blacklist /var/log
 blacklist /var/mail
 blacklist /var/opt
 blacklist /var/run/acpid.socket
@@ -332,6 +335,7 @@ blacklist /etc/hosts.equiv
 read-only ${HOME}/.caffrc
 read-only ${HOME}/.cargo/env
 read-only ${HOME}/.config/mpv
+read-only ${HOME}/.config/msmtp
 read-only ${HOME}/.config/nano
 read-only ${HOME}/.config/nvim
 read-only ${HOME}/.config/pkcs11
@@ -422,6 +426,7 @@ blacklist /etc/group-
 blacklist /etc/gshadow
 blacklist /etc/gshadow+
 blacklist /etc/gshadow-
+blacklist /etc/msmtprc
 blacklist /etc/passwd+
 blacklist /etc/passwd-
 blacklist /etc/shadow
@@ -444,6 +449,7 @@ blacklist ${HOME}/.cargo/credentials.toml
 blacklist ${HOME}/.cert
 blacklist ${HOME}/.config/hub
 blacklist ${HOME}/.config/keybase
+blacklist ${HOME}/.config/msmtp
 blacklist ${HOME}/.davfs2/secrets
 blacklist ${HOME}/.ecryptfs
 blacklist ${HOME}/.fetchmailrc
@@ -502,6 +508,7 @@ blacklist /usr/sbin
 
 # system management and various SUID executables
 blacklist ${PATH}/at
+blacklist ${PATH}/bmon
 blacklist ${PATH}/busybox
 blacklist ${PATH}/chage
 blacklist ${PATH}/chfn
@@ -510,71 +517,75 @@ blacklist ${PATH}/crontab
 blacklist ${PATH}/doas
 blacklist ${PATH}/evtest
 blacklist ${PATH}/expiry
-blacklist ${PATH}/fusermount
+blacklist ${PATH}/fping
+blacklist ${PATH}/fping6
+blacklist ${PATH}/fusermount*
 blacklist ${PATH}/gksu
 blacklist ${PATH}/gksudo
 blacklist ${PATH}/gpasswd
+blacklist ${PATH}/groupmems
+blacklist ${PATH}/hostname
+#blacklist ${PATH}/ip # breaks --ip=dhcp
 blacklist ${PATH}/kdesudo
 blacklist ${PATH}/ksu
 blacklist ${PATH}/mount
-blacklist ${PATH}/mount.ecryptfs_private
+blacklist ${PATH}/mount.*
 blacklist ${PATH}/mountpoint
+blacklist ${PATH}/mtr
+blacklist ${PATH}/mtr-packet
 blacklist ${PATH}/nc
-blacklist ${PATH}/nc.traditional
 blacklist ${PATH}/nc.openbsd
+blacklist ${PATH}/nc.traditional
 blacklist ${PATH}/ncat
-blacklist ${PATH}/nmap
+blacklist ${PATH}/netstat
+blacklist ${PATH}/networkctl
 blacklist ${PATH}/newgidmap
 blacklist ${PATH}/newgrp
 blacklist ${PATH}/newuidmap
-blacklist ${PATH}/ntfs-3g
-blacklist ${PATH}/pkexec
-blacklist ${PATH}/procmail
-blacklist ${PATH}/sg
-blacklist ${PATH}/strace
-blacklist ${PATH}/su
-blacklist ${PATH}/sudo
-blacklist ${PATH}/tcpdump
-blacklist ${PATH}/umount
-blacklist ${PATH}/unix_chkpwd
-blacklist ${PATH}/xev
-blacklist ${PATH}/xinput
-blacklist /usr/lib/openssh
-blacklist /usr/lib/ssh
-blacklist /usr/libexec/openssh
-blacklist ${PATH}/passwd
-blacklist /usr/lib/xorg/Xorg.wrap
-blacklist /usr/lib/policykit-1/polkit-agent-helper-1
-blacklist /usr/lib/dbus-1.0/dbus-daemon-launch-helper
-blacklist /usr/lib/eject/dmcrypt-get-device
-blacklist /usr/lib/chromium/chrome-sandbox
-blacklist /usr/lib/opera/opera_sandbox
-blacklist /usr/lib/vmware
-blacklist ${PATH}/suexec
-blacklist /usr/lib/squid/basic_pam_auth
-blacklist ${PATH}/slock
-blacklist ${PATH}/physlock
-blacklist ${PATH}/schroot
-blacklist ${PATH}/wshowkeys
-blacklist ${PATH}/pmount
-blacklist ${PATH}/pumount
-blacklist ${PATH}/bmon
-blacklist ${PATH}/fping
-blacklist ${PATH}/fping6
-blacklist ${PATH}/hostname
-# blacklist ${PATH}/ip - breaks --ip=dhcp
-blacklist ${PATH}/mtr
-blacklist ${PATH}/mtr-packet
-blacklist ${PATH}/netstat
 blacklist ${PATH}/nm-online
+blacklist ${PATH}/nmap
 blacklist ${PATH}/nmcli
 blacklist ${PATH}/nmtui
 blacklist ${PATH}/nmtui-connect
 blacklist ${PATH}/nmtui-edit
 blacklist ${PATH}/nmtui-hostname
-blacklist ${PATH}/networkctl
+blacklist ${PATH}/ntfs-3g
+blacklist ${PATH}/passwd
+blacklist ${PATH}/physlock
+blacklist ${PATH}/pkexec
+blacklist ${PATH}/plocate
+blacklist ${PATH}/pmount
+blacklist ${PATH}/procmail
+blacklist ${PATH}/pumount
+blacklist ${PATH}/schroot
+blacklist ${PATH}/sg
+blacklist ${PATH}/slock
 blacklist ${PATH}/ss
+blacklist ${PATH}/ssmtp
+blacklist ${PATH}/strace
+blacklist ${PATH}/su
+blacklist ${PATH}/sudo
+blacklist ${PATH}/suexec
+blacklist ${PATH}/tcpdump
 blacklist ${PATH}/traceroute
+blacklist ${PATH}/umount
+blacklist ${PATH}/unix_chkpwd
+blacklist ${PATH}/wall
+blacklist ${PATH}/write
+blacklist ${PATH}/wshowkeys
+blacklist ${PATH}/xev
+blacklist ${PATH}/xinput
+blacklist /usr/lib/chromium/chrome-sandbox
+blacklist /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+blacklist /usr/lib/eject/dmcrypt-get-device
+blacklist /usr/lib/openssh
+blacklist /usr/lib/opera/opera_sandbox
+blacklist /usr/lib/policykit-1/polkit-agent-helper-1
+blacklist /usr/lib/squid/basic_pam_auth
+blacklist /usr/lib/ssh
+blacklist /usr/lib/vmware
+blacklist /usr/lib/xorg/Xorg.wrap
+blacklist /usr/libexec/openssh
 # since firejail version 0.9.73
 blacklist ${PATH}/dpkg*
 blacklist ${PATH}/apt*
@@ -608,11 +619,13 @@ blacklist /tmp/.lxterminal-socket*
 blacklist /tmp/tmux-*
 
 # disable terminals running as server resulting in sandbox escape
+blacklist ${PATH}/foot
+blacklist ${PATH}/footserver
 blacklist ${PATH}/gnome-terminal
 blacklist ${PATH}/gnome-terminal.wrapper
 blacklist ${PATH}/kgx
-# blacklist ${PATH}/konsole
 # konsole doesn't seem to have this problem - last tested on Ubuntu 16.04
+#blacklist ${PATH}/konsole
 blacklist ${PATH}/lilyterm
 blacklist ${PATH}/lxterminal
 blacklist ${PATH}/mate-terminal
