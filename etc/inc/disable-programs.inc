@@ -411,6 +411,7 @@ blacklist ${HOME}/.config/com.github.bleakgrey.tootle
 blacklist ${HOME}/.config/com.lettura.dev
 blacklist ${HOME}/.config/corebird
 blacklist ${HOME}/.config/coyim
+blacklist ${HOME}/.config/curlrc
 blacklist ${HOME}/.config/d-feet
 blacklist ${HOME}/.config/darktable
 blacklist ${HOME}/.config/deadbeef
@@ -1219,6 +1220,7 @@ blacklist ${HOME}/Standard Notes Backups
 blacklist ${HOME}/TeamSpeak3-Client-linux_amd64
 blacklist ${HOME}/TeamSpeak3-Client-linux_x86
 blacklist ${HOME}/UpdateInfo
+blacklist ${HOME}/Zomboid
 blacklist ${HOME}/hyperrogue.ini
 blacklist ${HOME}/i2p
 blacklist ${HOME}/mps

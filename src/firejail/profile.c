@@ -635,9 +635,7 @@ int profile_check_line(char *ptr, int lineno, const char *fname) {
 #ifdef HAVE_NETWORK
 		if (checkcfg(CFG_NETWORK)) {
 			arg_netfilter = 1;
-			arg_netfilter_file = strdup(ptr + 10);
-			if (!arg_netfilter_file)
-				errExit("strdup");
+			arg_netfilter_file = expand_macros(ptr + 10);
 			check_netfilter_file(arg_netfilter_file);
 		}
 		else
@@ -649,9 +647,7 @@ int profile_check_line(char *ptr, int lineno, const char *fname) {
 #ifdef HAVE_NETWORK
 		if (checkcfg(CFG_NETWORK)) {
 			arg_netfilter6 = 1;
-			arg_netfilter6_file = strdup(ptr + 11);
-			if (!arg_netfilter6_file)
-				errExit("strdup");
+			arg_netfilter6_file = expand_macros(ptr + 11);
 			check_netfilter_file(arg_netfilter6_file);
 		}
 		else
@@ -1076,6 +1072,44 @@ int profile_check_line(char *ptr, int lineno, const char *fname) {
 			warning_feature_disabled("seccomp");
 		return 0;
 	}
+
+#ifdef HAVE_LANDLOCK
+	// Landlock ruleset paths
+	if (strcmp(ptr, "landlock") == 0) {
+		arg_landlock = 1;
+		return 0;
+	}
+	if (strncmp(ptr, "landlock.proc ", 14) == 0) {
+			if (strncmp(ptr + 14, "no", 2) == 0)
+				arg_landlock_proc = 0;
+			else if (strncmp(ptr + 14, "ro", 2) == 0)
+				arg_landlock_proc = 1;
+			else if (strncmp(ptr + 14, "rw", 2) == 0)
+				arg_landlock_proc = 2;
+			else {
+				fprintf(stderr, "Error: invalid landlock.proc value: %s\n",
+				        ptr + 14);
+				exit(1);
+			}
+			return 0;
+	}
+	if (strncmp(ptr, "landlock.read ", 14) == 0) {
+		ll_add_profile(LL_READ, ptr + 14);
+		return 0;
+	}
+	if (strncmp(ptr, "landlock.write ", 15) == 0) {
+		ll_add_profile(LL_WRITE, ptr + 15);
+		return 0;
+	}
+	if (strncmp(ptr, "landlock.special ", 17) == 0) {
+		ll_add_profile(LL_SPECIAL, ptr + 17);
+		return 0;
+	}
+	if (strncmp(ptr, "landlock.execute ", 17) == 0) {
+		ll_add_profile(LL_EXEC, ptr + 17);
+		return 0;
+	}
+#endif
 
 	// memory deny write&execute
 	if (strcmp(ptr, "memory-deny-write-execute") == 0) {
@@ -1901,8 +1935,7 @@ void profile_read(const char *fname) {
 	fclose(fp);
 }
 
-char *profile_list_normalize(char *list)
-{
+char *profile_list_normalize(char *list) {
 	/* Remove redundant commas.
 	 *
 	 * As result is always shorter than original,

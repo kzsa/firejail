@@ -75,6 +75,9 @@ int arg_overlay = 0;				// overlay option
 int arg_overlay_keep = 0;			// place overlay diff in a known directory
 int arg_overlay_reuse = 0;			// allow the reuse of overlays
 
+int arg_landlock = 0;			// add basic Landlock rules
+int arg_landlock_proc = 2;		// 0 - no access; 1 -read-only; 2 - read-write
+
 int arg_seccomp = 0;				// enable default seccomp filter
 int arg_seccomp32 = 0;				// enable default seccomp filter for 32 bit arch
 int arg_seccomp_postexec = 0;			// need postexec ld.preload library?
@@ -1500,6 +1503,31 @@ int main(int argc, char **argv, char **envp) {
 			else
 				exit_err_feature("seccomp");
 		}
+#ifdef HAVE_LANDLOCK
+		else if (strcmp(argv[i], "--landlock") == 0)
+			arg_landlock = 1;
+		else if (strncmp(argv[i], "--landlock.proc=", 16) == 0) {
+			if (strncmp(argv[i] + 16, "no", 2) == 0)
+				arg_landlock_proc = 0;
+			else if (strncmp(argv[i] + 16, "ro", 2) == 0)
+				arg_landlock_proc = 1;
+			else if (strncmp(argv[i] + 16, "rw", 2) == 0)
+				arg_landlock_proc = 2;
+			else {
+				fprintf(stderr, "Error: invalid landlock.proc value: %s\n",
+				        argv[i] + 16);
+				exit(1);
+			}
+		}
+		else if (strncmp(argv[i], "--landlock.read=", 16) == 0)
+			ll_add_profile(LL_READ, argv[i] + 16);
+		else if (strncmp(argv[i], "--landlock.write=", 17) == 0)
+			ll_add_profile(LL_WRITE, argv[i] + 17);
+		else if (strncmp(argv[i], "--landlock.special=", 19) == 0)
+			ll_add_profile(LL_SPECIAL, argv[i] + 19);
+		else if (strncmp(argv[i], "--landlock.execute=", 19) == 0)
+			ll_add_profile(LL_EXEC, argv[i] + 19);
+#endif
 		else if (strcmp(argv[i], "--memory-deny-write-execute") == 0) {
 			if (checkcfg(CFG_SECCOMP))
 				arg_memory_deny_write_execute = 1;
@@ -1572,7 +1600,7 @@ int main(int argc, char **argv, char **envp) {
 			arg_trace = 1;
 		else if (strncmp(argv[i], "--trace=", 8) == 0) {
 			arg_trace = 1;
-			arg_tracefile = argv[i] + 8;
+			arg_tracefile = expand_macros(argv[i] + 8);
 			if (*arg_tracefile == '\0') {
 				fprintf(stderr, "Error: invalid trace option\n");
 				exit(1);
@@ -1581,13 +1609,6 @@ int main(int argc, char **argv, char **envp) {
 			if (strstr(arg_tracefile, "..") || has_cntrl_chars(arg_tracefile)) {
 				fprintf(stderr, "Error: invalid file name %s\n", arg_tracefile);
 				exit(1);
-			}
-			// if the filename starts with ~, expand the home directory
-			if (*arg_tracefile == '~') {
-				char *tmp;
-				if (asprintf(&tmp, "%s%s", cfg.homedir, arg_tracefile + 1) == -1)
-					errExit("asprintf");
-				arg_tracefile = tmp;
 			}
 		}
 		else if (strcmp(argv[i], "--tracelog") == 0) {
@@ -1953,20 +1974,13 @@ int main(int argc, char **argv, char **envp) {
 				}
 
 				// extract chroot dirname
-				cfg.chrootdir = argv[i] + 9;
+				cfg.chrootdir = expand_macros(argv[i] + 9);
 				if (*cfg.chrootdir == '\0') {
 					fprintf(stderr, "Error: invalid chroot option\n");
 					exit(1);
 				}
 				invalid_filename(cfg.chrootdir, 0); // no globbing
 
-				// if the directory starts with ~, expand the home directory
-				if (*cfg.chrootdir == '~') {
-					char *tmp;
-					if (asprintf(&tmp, "%s%s", cfg.homedir, cfg.chrootdir + 1) == -1)
-						errExit("asprintf");
-					cfg.chrootdir = tmp;
-				}
 				// check chroot directory
 				fs_check_chroot_dir();
 			}
@@ -2748,16 +2762,7 @@ int main(int argc, char **argv, char **envp) {
 		else if (strncmp(argv[i], "--netfilter=", 12) == 0) {
 			if (checkcfg(CFG_NETWORK)) {
 				arg_netfilter = 1;
-				arg_netfilter_file = argv[i] + 12;
-
-				// expand tilde
-				if (*arg_netfilter_file == '~') {
-					char *tmp;
-					if (asprintf(&tmp, "%s%s", cfg.homedir, arg_netfilter_file + 1) == -1)
-						errExit("asprintf");
-					arg_netfilter_file = tmp;
-				}
-
+				arg_netfilter_file = expand_macros(argv[i] + 12);
 				check_netfilter_file(arg_netfilter_file);
 			}
 			else
@@ -2767,16 +2772,7 @@ int main(int argc, char **argv, char **envp) {
 		else if (strncmp(argv[i], "--netfilter6=", 13) == 0) {
 			if (checkcfg(CFG_NETWORK)) {
 				arg_netfilter6 = 1;
-				arg_netfilter6_file = argv[i] + 13;
-
-				// expand tilde
-				if (*arg_netfilter6_file == '~') {
-					char *tmp;
-					if (asprintf(&tmp, "%s%s", cfg.homedir, arg_netfilter6_file + 1) == -1)
-						errExit("asprintf");
-					arg_netfilter6_file = tmp;
-				}
-
+				arg_netfilter6_file = expand_macros(argv[i] + 13);
 				check_netfilter_file(arg_netfilter6_file);
 			}
 			else
