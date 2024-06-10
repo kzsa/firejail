@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -63,6 +63,8 @@ gid_t firejail_gid = 0;
 static char child_stack[STACK_SIZE] __attribute__((aligned(STACK_ALIGNMENT)));		// space for child's stack
 
 Config cfg;					// configuration
+int lockfd_directory = -1;
+int lockfd_network = -1;
 int arg_private = 0;				// mount private /home and /tmp directoryu
 int arg_private_cache = 0;		// mount private home/.cache
 int arg_debug = 0;				// print debug messages
@@ -75,8 +77,7 @@ int arg_overlay = 0;				// overlay option
 int arg_overlay_keep = 0;			// place overlay diff in a known directory
 int arg_overlay_reuse = 0;			// allow the reuse of overlays
 
-int arg_landlock = 0;			// add basic Landlock rules
-int arg_landlock_proc = 2;		// 0 - no access; 1 -read-only; 2 - read-write
+int arg_landlock_enforce = 0;		// enforce the Landlock ruleset
 
 int arg_seccomp = 0;				// enable default seccomp filter
 int arg_seccomp32 = 0;				// enable default seccomp filter for 32 bit arch
@@ -1057,8 +1058,6 @@ static int check_postexec(const char *list) {
 int main(int argc, char **argv, char **envp) {
 	int i;
 	int prog_index = -1;		// index in argv where the program command starts
-	int lockfd_network = -1;
-	int lockfd_directory = -1;
 	int custom_profile = 0;		// custom profile loaded
 	int arg_caps_cmdline = 0;	// caps requested on command line (used to break out of --chroot)
 	char **ptr;
@@ -1167,19 +1166,13 @@ int main(int argc, char **argv, char **envp) {
 #endif
 
 	// build /run/firejail directory structure
-	preproc_build_firejail_dir();
+	preproc_build_firejail_dir_unlocked();
+	preproc_lock_firejail_dir();
+	preproc_build_firejail_dir_locked();
 	const char *container_name = env_get("container");
-	if (!container_name || strcmp(container_name, "firejail")) {
-		lockfd_directory = open(RUN_DIRECTORY_LOCK_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR);
-		if (lockfd_directory != -1) {
-			int rv = fchown(lockfd_directory, 0, 0);
-			(void) rv;
-			flock(lockfd_directory, LOCK_EX);
-		}
+	if (!container_name || strcmp(container_name, "firejail"))
 		preproc_clean_run();
-		flock(lockfd_directory, LOCK_UN);
-		close(lockfd_directory);
-	}
+	preproc_unlock_firejail_dir();
 
 	delete_run_files(getpid());
 	atexit(clear_atexit);
@@ -1504,29 +1497,18 @@ int main(int argc, char **argv, char **envp) {
 				exit_err_feature("seccomp");
 		}
 #ifdef HAVE_LANDLOCK
-		else if (strcmp(argv[i], "--landlock") == 0)
-			arg_landlock = 1;
-		else if (strncmp(argv[i], "--landlock.proc=", 16) == 0) {
-			if (strncmp(argv[i] + 16, "no", 2) == 0)
-				arg_landlock_proc = 0;
-			else if (strncmp(argv[i] + 16, "ro", 2) == 0)
-				arg_landlock_proc = 1;
-			else if (strncmp(argv[i] + 16, "rw", 2) == 0)
-				arg_landlock_proc = 2;
-			else {
-				fprintf(stderr, "Error: invalid landlock.proc value: %s\n",
-				        argv[i] + 16);
-				exit(1);
-			}
-		}
-		else if (strncmp(argv[i], "--landlock.read=", 16) == 0)
-			ll_add_profile(LL_READ, argv[i] + 16);
-		else if (strncmp(argv[i], "--landlock.write=", 17) == 0)
-			ll_add_profile(LL_WRITE, argv[i] + 17);
-		else if (strncmp(argv[i], "--landlock.special=", 19) == 0)
-			ll_add_profile(LL_SPECIAL, argv[i] + 19);
-		else if (strncmp(argv[i], "--landlock.execute=", 19) == 0)
-			ll_add_profile(LL_EXEC, argv[i] + 19);
+		else if (strncmp(argv[i], "--landlock.enforce", 18) == 0)
+			arg_landlock_enforce = 1;
+		else if (strncmp(argv[i], "--landlock.fs.read=", 19) == 0)
+			ll_add_profile(LL_FS_READ, argv[i] + 19);
+		else if (strncmp(argv[i], "--landlock.fs.write=", 20) == 0)
+			ll_add_profile(LL_FS_WRITE, argv[i] + 20);
+		else if (strncmp(argv[i], "--landlock.fs.makeipc=", 22) == 0)
+			ll_add_profile(LL_FS_MAKEIPC, argv[i] + 22);
+		else if (strncmp(argv[i], "--landlock.fs.makedev=", 22) == 0)
+			ll_add_profile(LL_FS_MAKEDEV, argv[i] + 22);
+		else if (strncmp(argv[i], "--landlock.fs.execute=", 22) == 0)
+			ll_add_profile(LL_FS_EXEC, argv[i] + 22);
 #endif
 		else if (strcmp(argv[i], "--memory-deny-write-execute") == 0) {
 			if (checkcfg(CFG_SECCOMP))
@@ -1839,33 +1821,6 @@ int main(int argc, char **argv, char **envp) {
 			}
 			else
 				exit_err_feature("overlayfs");
-		}
-#endif
-#ifdef HAVE_FIRETUNNEL
-		else if (strcmp(argv[i], "--tunnel") == 0) {
-			// try to connect to the default client side of the tunnel
-			// if this fails, try the default server side of the tunnel
-			if (access("/run/firetunnel/ftc", R_OK) == 0)
-				profile_read("/run/firetunnel/ftc");
-			else if (access("/run/firetunnel/fts", R_OK) == 0)
-				profile_read("/run/firetunnel/fts");
-			else {
-				fprintf(stderr, "Error: no default firetunnel found, please specify it using --tunnel=devname option\n");
-				exit(1);
-			}
-		}
-		else if (strncmp(argv[i], "--tunnel=", 9) == 0) {
-			char *fname;
-
-			if (asprintf(&fname, "/run/firetunnel/%s", argv[i] + 9) == -1)
-				errExit("asprintf");
-			invalid_filename(fname, 0); // no globbing
-			if (access(fname, R_OK) == 0)
-				profile_read(fname);
-			else {
-				fprintf(stderr, "Error: tunnel not found\n");
-				exit(1);
-			}
 		}
 #endif
 		else if (strncmp(argv[i], "--include=", 10) == 0) {
@@ -2998,10 +2953,10 @@ int main(int argc, char **argv, char **envp) {
 	}
 	EUID_ASSERT();
 
-	// Note: Only attempt to print non-debug information to stdout after
-	// all profiles have been loaded (because a profile may set arg_quiet)
+	// Note: Only attempt to print non-debug information after all profiles
+	// have been loaded (because a profile may set arg_quiet)
 	if (!arg_quiet)
-		print_version();
+		print_version(stderr);
 
 	// block X11 sockets
 	if (arg_x11_block)
@@ -3029,12 +2984,7 @@ int main(int argc, char **argv, char **envp) {
 	// check and assign an IP address - for macvlan it will be done again in the sandbox!
 	if (any_bridge_configured()) {
 		EUID_ROOT();
-		lockfd_network = open(RUN_NETWORK_LOCK_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR);
-		if (lockfd_network != -1) {
-			int rv = fchown(lockfd_network, 0, 0);
-			(void) rv;
-			flock(lockfd_network, LOCK_EX);
-		}
+		preproc_lock_firejail_network_dir();
 
 		if (cfg.bridge0.configured && cfg.bridge0.arg_ip_none == 0)
 			check_network(&cfg.bridge0);
@@ -3063,21 +3013,13 @@ int main(int argc, char **argv, char **envp) {
 
 	// set name and x11 run files
 	EUID_ROOT();
-	lockfd_directory = open(RUN_DIRECTORY_LOCK_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR);
-	if (lockfd_directory != -1) {
-		int rv = fchown(lockfd_directory, 0, 0);
-		(void) rv;
-		flock(lockfd_directory, LOCK_EX);
-	}
+	preproc_lock_firejail_dir();
 	if (cfg.name)
 		set_name_run_file(sandbox_pid);
 	int display = x11_display();
 	if (display > 0)
 		set_x11_run_file(sandbox_pid, display);
-	if (lockfd_directory != -1) {
-		flock(lockfd_directory, LOCK_UN);
-		close(lockfd_directory);
-	}
+	preproc_unlock_firejail_dir();
 	EUID_USER();
 
 #ifdef HAVE_DBUSPROXY
@@ -3315,10 +3257,7 @@ int main(int argc, char **argv, char **envp) {
 	close(parent_to_child_fds[1]);
 
 	EUID_ROOT();
-	if (lockfd_network != -1) {
-		flock(lockfd_network, LOCK_UN);
-		close(lockfd_network);
-	}
+	preproc_unlock_firejail_network_dir();
 	EUID_USER();
 
 	// lock netfilter firewall

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -152,11 +152,12 @@ typedef struct profile_entry_t {
 
 typedef struct landlock_entry_t {
 	struct landlock_entry_t *next;
-#define LL_READ 0
-#define LL_WRITE 1
-#define LL_SPECIAL 2
-#define LL_EXEC 3
-#define LL_MAX 4
+#define LL_FS_READ 0
+#define LL_FS_WRITE 1
+#define LL_FS_MAKEIPC 2
+#define LL_FS_MAKEDEV 3
+#define LL_FS_EXEC 4
+#define LL_MAX 5
 	int type;
 	char *data;
 } LandlockEntry;
@@ -281,6 +282,8 @@ static inline int any_dhcp(void) {
 	return any_ip_dhcp() || any_ip6_dhcp();
 }
 
+extern int lockfd_directory;
+extern int lockfd_network;
 extern int arg_private;		// mount private /home
 extern int arg_private_cache;	// private home/.cache
 extern int arg_debug;		// print debug messages
@@ -293,8 +296,7 @@ extern int arg_overlay;		// overlay option
 extern int arg_overlay_keep;	// place overlay diff in a known directory
 extern int arg_overlay_reuse;	// allow the reuse of overlays
 
-extern int arg_landlock;		// add basic Landlock rules
-extern int arg_landlock_proc;		// 0 - no access; 1 -read-only; 2 - read-write
+extern int arg_landlock_enforce;	// enforce the Landlock ruleset
 
 extern int arg_seccomp;	// enable default seccomp filter
 extern int arg_seccomp32;	// enable default seccomp filter for 32 bit arch
@@ -429,7 +431,12 @@ int net_get_mac(const char *ifname, unsigned char mac[6]);
 void net_config_interface(const char *dev, uint32_t ip, uint32_t mask, int mtu);
 
 // preproc.c
-void preproc_build_firejail_dir(void);
+void preproc_lock_firejail_dir(void);
+void preproc_unlock_firejail_dir(void);
+void preproc_lock_firejail_network_dir(void);
+void preproc_unlock_firejail_network_dir(void);
+void preproc_build_firejail_dir_unlocked(void);
+void preproc_build_firejail_dir_locked(void);
 void preproc_mount_mnt_dir(void);
 void preproc_clean_run(void);
 
@@ -493,7 +500,7 @@ void tree(void);
 void top(void);
 
 // usage.c
-void print_version(void);
+void print_version(FILE *stream);
 void print_version_full(void);
 void usage(void);
 
@@ -966,16 +973,8 @@ void run_ids(int argc, char **argv);
 void oom_set(const char *oom_string);
 
 // landlock.c
-#ifdef HAVE_LANDLOCK
 int ll_get_fd(void);
-int ll_is_supported(void);
-int ll_read(const char *allowed_path);
-int ll_write(const char *allowed_path);
-int ll_special(const char *allowed_path);
-int ll_exec(const char *allowed_path);
-int ll_basic_system(void);
 int ll_restrict(uint32_t flags);
 void ll_add_profile(int type, const char *data);
-#endif /* HAVE_LANDLOCK */
 
 #endif

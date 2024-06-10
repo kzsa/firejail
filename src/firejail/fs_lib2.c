@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -166,12 +166,8 @@ void fslib_install_firejail(void) {
 		fslib_mount_libs(RUN_MNT_DIR "/dhclient", 1); // parse as user
 
 	// bring in xauth libraries
-
-	char *xauth_bin = find_in_path("xauth");
 	if (arg_x11_xorg)
-		fslib_mount_libs(xauth_bin, 1); // parse as user
-
-	free(xauth_bin);
+		fslib_mount_libs("/usr/bin/xauth", 1); // parse as user
 
 	fmessage("Firejail libraries installed in %0.2f ms\n", timetrace_end());
 }

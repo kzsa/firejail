@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -26,7 +26,7 @@
 void build_profile(int argc, char **argv, int index, FILE *fp) {
 	// next index is the application name
 	if (index >= argc) {
-		fprintf(stderr, "Error: application name missing\n");
+		fprintf(stderr, "Error fbuilder: application name missing\n");
 		exit(1);
 	}
 
@@ -165,7 +165,7 @@ void build_profile(int argc, char **argv, int index, FILE *fp) {
 			unlink(trace_output);
 	}
 	else {
-		fprintf(stderr, "Error: cannot run the sandbox\n");
+		fprintf(stderr, "Error fbuilder: cannot run the sandbox\n");
 		exit(1);
 	}
 }

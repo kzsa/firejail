@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -18,14 +18,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifdef HAVE_LANDLOCK
 #include "firejail.h"
-#include <linux/landlock.h>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifdef HAVE_LANDLOCK
+
+#include <linux/landlock.h>
 
 static int ll_ruleset_fd = -1;
 static int ll_abi = -1;
@@ -60,7 +62,7 @@ landlock_restrict_self(const int ruleset_fd, const __u32 flags) {
 }
 #endif
 
-int ll_is_supported(void) {
+static int ll_is_supported(void) {
 	if (ll_abi != -1)
 		goto out;
 
@@ -83,10 +85,7 @@ out:
 }
 
 static int ll_create_full_ruleset(void) {
-	if (!ll_is_supported())
-		return -1;
-
-	struct landlock_ruleset_attr attr;
+	struct landlock_ruleset_attr attr = {0};
 	attr.handled_access_fs =
 		LANDLOCK_ACCESS_FS_EXECUTE |
 		LANDLOCK_ACCESS_FS_MAKE_BLOCK |
@@ -109,7 +108,7 @@ static int ll_create_full_ruleset(void) {
 
 	int ruleset_fd = landlock_create_ruleset(&attr, sizeof(attr), 0);
 	if (ruleset_fd < 0) {
-		fprintf(stderr, "%s: Error: failed to create Landlock ruleset "
+		fprintf(stderr, "Error: %s: failed to create Landlock ruleset "
 		                "(abi=%d fs=%llx): %s\n",
 		        __func__, ll_abi, attr.handled_access_fs,
 		        strerror(errno));
@@ -117,11 +116,8 @@ static int ll_create_full_ruleset(void) {
 	return ruleset_fd;
 }
 
-static int ll_fs(const char *allowed_path, const __u64 allowed_access,
-                 const char *caller) {
-	if (!ll_is_supported())
-		return 0;
-
+static void _ll_fs(const char *allowed_path, const __u64 allowed_access,
+                   const char *caller) {
 	if (ll_ruleset_fd == -1)
 		ll_ruleset_fd = ll_create_full_ruleset();
 
@@ -130,21 +126,20 @@ static int ll_fs(const char *allowed_path, const __u64 allowed_access,
 		        caller, ll_abi, allowed_access, allowed_path);
 	}
 
-	int error;
 	int allowed_fd = open(allowed_path, O_PATH | O_CLOEXEC);
 	if (allowed_fd < 0) {
 		if (arg_debug) {
 			fprintf(stderr, "%s: failed to open %s: %s\n",
 			        caller, allowed_path, strerror(errno));
 		}
-		return 0;
+		return;
 	}
 
-	struct landlock_path_beneath_attr target;
+	struct landlock_path_beneath_attr target = {0};
 	target.parent_fd = allowed_fd;
 	target.allowed_access = allowed_access;
-	error = landlock_add_rule(ll_ruleset_fd, LANDLOCK_RULE_PATH_BENEATH,
-	                          &target, 0);
+	int error = landlock_add_rule(ll_ruleset_fd, LANDLOCK_RULE_PATH_BENEATH,
+	                              &target, 0);
 	if (error) {
 		fprintf(stderr, "Error: %s: failed to add Landlock rule "
 		                "(abi=%d fs=%llx) for %s: %s\n",
@@ -152,18 +147,43 @@ static int ll_fs(const char *allowed_path, const __u64 allowed_access,
 		        strerror(errno));
 	}
 	close(allowed_fd);
-	return error;
 }
 
-int ll_read(const char *allowed_path) {
+static void ll_fs(const char *allowed_path, const __u64 allowed_access,
+                  const char *caller) {
+	char *expanded_path;
+
+	// ${PATH} macro is not included by default in expand_macros()
+	if (strncmp(allowed_path, "${PATH}", 7) == 0) {
+		char **paths = build_paths();
+		int i = 0;
+		while (paths[i] != NULL) {
+			if (asprintf(&expanded_path, "%s%s", paths[i], allowed_path + 7) == -1)
+				errExit("asprintf");
+			if (arg_debug)
+				fprintf(stderr, "landlock expand path %s\n", expanded_path);
+
+			_ll_fs(expanded_path, allowed_access, caller);
+			free(expanded_path);
+			i++;
+		}
+		return;
+	}
+
+	expanded_path = expand_macros(allowed_path);
+	_ll_fs(expanded_path, allowed_access, caller);
+	free(expanded_path);
+}
+
+static void ll_fs_read(const char *allowed_path) {
 	__u64 allowed_access =
 		LANDLOCK_ACCESS_FS_READ_DIR |
 		LANDLOCK_ACCESS_FS_READ_FILE;
 
-	return ll_fs(allowed_path, allowed_access, __func__);
+	ll_fs(allowed_path, allowed_access, __func__);
 }
 
-int ll_write(const char *allowed_path) {
+static void ll_fs_write(const char *allowed_path) {
 	__u64 allowed_access =
 		LANDLOCK_ACCESS_FS_MAKE_DIR |
 		LANDLOCK_ACCESS_FS_MAKE_REG |
@@ -172,95 +192,54 @@ int ll_write(const char *allowed_path) {
 		LANDLOCK_ACCESS_FS_REMOVE_FILE |
 		LANDLOCK_ACCESS_FS_WRITE_FILE;
 
-	return ll_fs(allowed_path, allowed_access, __func__);
+	ll_fs(allowed_path, allowed_access, __func__);
 }
 
-int ll_special(const char *allowed_path) {
+static void ll_fs_makeipc(const char *allowed_path) {
 	__u64 allowed_access =
-		LANDLOCK_ACCESS_FS_MAKE_BLOCK |
-		LANDLOCK_ACCESS_FS_MAKE_CHAR |
 		LANDLOCK_ACCESS_FS_MAKE_FIFO |
 		LANDLOCK_ACCESS_FS_MAKE_SOCK;
 
-	return ll_fs(allowed_path, allowed_access, __func__);
+	ll_fs(allowed_path, allowed_access, __func__);
 }
 
-int ll_exec(const char *allowed_path) {
+static void ll_fs_makedev(const char *allowed_path) {
+	__u64 allowed_access =
+		LANDLOCK_ACCESS_FS_MAKE_BLOCK |
+		LANDLOCK_ACCESS_FS_MAKE_CHAR;
+
+	ll_fs(allowed_path, allowed_access, __func__);
+}
+
+static void ll_fs_exec(const char *allowed_path) {
 	__u64 allowed_access =
 		LANDLOCK_ACCESS_FS_EXECUTE;
 
-	return ll_fs(allowed_path, allowed_access, __func__);
-}
-
-int ll_basic_system(void) {
-	assert(cfg.homedir);
-
-	if (!ll_is_supported())
-		return 0;
-
-	if (ll_ruleset_fd == -1)
-		ll_ruleset_fd = ll_create_full_ruleset();
-
-	int error;
-	char *rundir;
-	if (asprintf(&rundir, "/run/user/%d", getuid()) == -1)
-		errExit("asprintf");
-
-	error =
-		ll_read("/") ||       // whole system read
-		ll_special("/") ||    // sockets etc.
-
-		ll_write("/tmp") ||   // write access
-		ll_write("/dev") ||
-		ll_write("/run/shm") ||
-		ll_write(cfg.homedir) ||
-		ll_write(rundir) ||
-
-		ll_exec("/opt") ||    // exec access
-		ll_exec("/bin") ||
-		ll_exec("/sbin") ||
-		ll_exec("/lib") ||
-		ll_exec("/lib32") ||
-		ll_exec("/libx32") ||
-		ll_exec("/lib64") ||
-		ll_exec("/usr/bin") ||
-		ll_exec("/usr/sbin") ||
-		ll_exec("/usr/games") ||
-		ll_exec("/usr/lib") ||
-		ll_exec("/usr/lib32") ||
-		ll_exec("/usr/libx32") ||
-		ll_exec("/usr/lib64") ||
-		ll_exec("/usr/local/bin") ||
-		ll_exec("/usr/local/sbin") ||
-		ll_exec("/usr/local/games") ||
-		ll_exec("/usr/local/lib") ||
-		ll_exec("/run/firejail"); // appimage and various firejail features
-
-	if (error) {
-		fprintf(stderr, "Error: %s: failed to set --landlock rules\n",
-		        __func__);
-	}
-	free(rundir);
-	return error;
+	ll_fs(allowed_path, allowed_access, __func__);
 }
 
 int ll_restrict(uint32_t flags) {
 	if (!ll_is_supported())
 		return 0;
 
+	timetrace_start();
+
 	if (arg_debug)
 		fprintf(stderr, "%s: Starting Landlock restrict\n", __func__);
 
-	int (*fnc[])(const char *) = {
-		ll_read,
-		ll_write,
-		ll_special,
-		ll_exec,
+	void (*fnc[])(const char *) = {
+		ll_fs_read,
+		ll_fs_write,
+		ll_fs_makeipc,
+		ll_fs_makedev,
+		ll_fs_exec,
 		NULL
 	};
 
 	LandlockEntry *ptr = cfg.lprofile;
+	int rules = 0;
 	while (ptr) {
+		rules++;
 		fnc[ptr->type](ptr->data);
 		ptr = ptr->next;
 	}
@@ -281,8 +260,8 @@ int ll_restrict(uint32_t flags) {
 		        __func__, strerror(errno));
 		goto out;
 	}
-	if (arg_debug)
-		fprintf(stderr, "%s: Enforcing Landlock\n", __func__);
+	fmessage("%d Landlock rules initialized in %0.2f ms\n", rules, timetrace_end());
+
 out:
 	close(ll_ruleset_fd);
 	return error;
@@ -292,9 +271,6 @@ void ll_add_profile(int type, const char *data) {
 	assert(type >= 0);
 	assert(type < LL_MAX);
 	assert(data);
-
-	if (!ll_is_supported())
-		return;
 
 	while (*data == ' ' || *data == '\t')
 		data++;
@@ -317,6 +293,23 @@ void ll_add_profile(int type, const char *data) {
 	while (ptr->next != NULL)
 		ptr = ptr->next;
 	ptr->next = entry;
+}
+
+#else
+
+int ll_get_fd(void) {
+	return -1;
+}
+
+int ll_restrict(uint32_t flags) {
+	(void) flags;
+
+	return 0;
+}
+
+void ll_add_profile(int type, const char *data) {
+	(void) type;
+	(void) data;
 }
 
 #endif /* HAVE_LANDLOCK */

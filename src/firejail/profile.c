@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -1073,43 +1073,36 @@ int profile_check_line(char *ptr, int lineno, const char *fname) {
 		return 0;
 	}
 
-#ifdef HAVE_LANDLOCK
-	// Landlock ruleset paths
-	if (strcmp(ptr, "landlock") == 0) {
-		arg_landlock = 1;
+//#ifdef HAVE_LANDLOCK
+// landlock-common.inc is included by default.profile, so the entries of the
+// former should be processed or ignored instead of aborting.
+// Note that all landlock functions are empty when building without landlock
+// support.
+	if (strncmp(ptr, "landlock.enforce", 16) == 0) {
+		arg_landlock_enforce = 1;
 		return 0;
 	}
-	if (strncmp(ptr, "landlock.proc ", 14) == 0) {
-			if (strncmp(ptr + 14, "no", 2) == 0)
-				arg_landlock_proc = 0;
-			else if (strncmp(ptr + 14, "ro", 2) == 0)
-				arg_landlock_proc = 1;
-			else if (strncmp(ptr + 14, "rw", 2) == 0)
-				arg_landlock_proc = 2;
-			else {
-				fprintf(stderr, "Error: invalid landlock.proc value: %s\n",
-				        ptr + 14);
-				exit(1);
-			}
-			return 0;
-	}
-	if (strncmp(ptr, "landlock.read ", 14) == 0) {
-		ll_add_profile(LL_READ, ptr + 14);
+	if (strncmp(ptr, "landlock.fs.read ", 17) == 0) {
+		ll_add_profile(LL_FS_READ, ptr + 17);
 		return 0;
 	}
-	if (strncmp(ptr, "landlock.write ", 15) == 0) {
-		ll_add_profile(LL_WRITE, ptr + 15);
+	if (strncmp(ptr, "landlock.fs.write ", 18) == 0) {
+		ll_add_profile(LL_FS_WRITE, ptr + 18);
 		return 0;
 	}
-	if (strncmp(ptr, "landlock.special ", 17) == 0) {
-		ll_add_profile(LL_SPECIAL, ptr + 17);
+	if (strncmp(ptr, "landlock.fs.makeipc ", 20) == 0) {
+		ll_add_profile(LL_FS_MAKEIPC, ptr + 20);
 		return 0;
 	}
-	if (strncmp(ptr, "landlock.execute ", 17) == 0) {
-		ll_add_profile(LL_EXEC, ptr + 17);
+	if (strncmp(ptr, "landlock.fs.makedev ", 20) == 0) {
+		ll_add_profile(LL_FS_MAKEDEV, ptr + 20);
 		return 0;
 	}
-#endif
+	if (strncmp(ptr, "landlock.fs.execute ", 20) == 0) {
+		ll_add_profile(LL_FS_EXEC, ptr + 20);
+		return 0;
+	}
+//#endif
 
 	// memory deny write&execute
 	if (strcmp(ptr, "memory-deny-write-execute") == 0) {

@@ -59,7 +59,7 @@ Committers:
 - rusty-snake (https://github.com/rusty-snake)
 - smitsohu (https://github.com/smitsohu)
 - SkewedZeppelin (https://github.com/SkewedZeppelin)
-- startx2017 (https://github.com/startx2017) - LTS and *bugfixes branches
+- startx2017 (https://github.com/startx2017)
   maintainer)
 - Topi Miettinen (https://github.com/topimiettinen)
 - veloute (https://github.com/veloute)
@@ -413,6 +413,8 @@ fenuks (https://github.com/fenuks)
 	- allow /opt/tor-browser for Tor Browser profile
 fkrone (https://github.com/fkrone)
 	- fix Zoom profile
+Fidel Ramos (https://github.com/haplo)
+	- Ledger Live profile
 Florian Begusch (https://github.com/florianbegusch)
 	- (la)tex profiles
 	- fixed transmission-common.profile
@@ -530,7 +532,7 @@ GSI (https://github.com/GSI)
 	- added Uzbl browser profile
 haarp (https://github.com/haarp)
 	- Allow sound for hexchat
-	- discord-common.profile: harden & allow notifications 
+	- discord-common.profile: harden & allow notifications
 hamzadis (https://github.com/hamzadis)
 	- added --overlay-named=name and --overlay-path=path
 Hans-Christoph Steiner (https://github.com/eighthave)
@@ -829,6 +831,7 @@ NetSysFire (https://github.com/NetSysFire)
 	- update weechat profile
 	- update megaglest profile
 	- added parsecd profile
+	- fix minecraft-launcher.profile
 Nick Fox (https://github.com/njfox)
 	- add a profile alias for code-oss
 	- add code-oss config directory
@@ -934,6 +937,8 @@ PizzaDude (https://github.com/pizzadude)
 	- fix welcome.sh
 polyzen (https://github.com/polyzen)
 	- fixed wusc issue with mpv/Vulkan
+powerjungle (https://github.com/powerjungle)
+	- fixed multimc
 probonopd (https://github.com/probonopd)
 	- automatic build on Travis CI
 pshpsh (https://github.com/pshpsh)
@@ -1224,7 +1229,7 @@ ValdikSS (https://github.com/ValdikSS)
 	- various profile fixes
 Varun Sharma (https://github.com/varunsh-coder)
 	- update allowed endpoints
-	- build(deps): bump step-security/harden-runner from 2.5.0 to 2.5.1 
+	- build(deps): bump step-security/harden-runner from 2.5.0 to 2.5.1
 Vasya Novikov (https://github.com/vn971)
 	- Wesnoth profile
 	- Hedegewars profile
@@ -1310,4 +1315,4 @@ Zack Weinberg (https://github.com/zackw)
 zupatisc (https://github.com/zupatisc)
 	- patch-util fix
 
-Copyright (C) 2014-2023 Firejail Authors
+Copyright (C) 2014-2024 Firejail Authors

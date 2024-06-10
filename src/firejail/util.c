@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -1392,6 +1392,7 @@ void enter_network_namespace(pid_t pid) {
 		fprintf(stderr, "Error: the sandbox doesn't use a new network namespace\n");
 		exit(1);
 	}
+	free(name);
 
 	// join the namespace
 	EUID_ROOT();

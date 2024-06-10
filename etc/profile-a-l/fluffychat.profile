@@ -25,7 +25,6 @@ include disable-xdg.inc
 # there isn't a Firefox instance running with the default profile; see #5352)
 noblacklist ${HOME}/.mozilla
 whitelist ${HOME}/.mozilla/firefox/profiles.ini
-read-only ${HOME}/.mozilla/firefox/profiles.ini
 
 mkdir ${HOME}/.local/share/fluffychat
 whitelist ${DOWNLOADS}
@@ -65,7 +64,7 @@ private-tmp
 
 dbus-user filter
 dbus-user.talk org.freedesktop.secrets
-# allow D-Bus communication with firefox for opening links
+# Allow D-Bus communication with Firefox for opening links
 dbus-user.talk org.mozilla.*
 dbus-system filter
 dbus-system.talk org.freedesktop.NetworkManager

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -50,6 +50,8 @@
 
 // main.c
 extern int arg_debug;
+int in_ignorelist(const char *const str);
+void parse_config_all(int do_symlink);
 
 // util.c
 int which(const char *program);

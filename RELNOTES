@@ -1,5 +1,6 @@
 firejail (0.9.73) baseline; urgency=low
   * work in progress
+  * security: fix sscanf rv checks (CodeQL) (#6184)
   * feature: Add "keep-shell-rc" command and option (#1127 #5634)
   * feature: Print the argument when failing with "too long arguments" (#5677)
   * feature: a random hostname is assigned to each sandbox unless
@@ -9,6 +10,13 @@ firejail (0.9.73) baseline; urgency=low
   * feature: add seccomp filters for --restrict-namespaces
   * feature: stats support for --nettrace
   * feature: add doas support in firecfg and jailcheck (#5899 #5900)
+  * feature: firecfg: add firecfg.d & add ignore command (#2097 #5245 #5876
+    #6153 #6268)
+  * feature: expand simple macros in more commands (--chroot= --netfilter=
+    --netfilter6= --trace=) (#6032 #6109)
+  * feature: add Landlock support (#5269 #6078 #6115 #6125 #6187 #6195 #6200
+    #6228 #6260 #6302 #6305)
+  * feature: add support for comm, coredump, and prctl procevents in firemon
   * modif: Stop forwarding own double-dash to the shell (#5599 #5600)
   * modif: Prevent sandbox name (--name=) and host name (--hostname=)
     from containing only digits (#5578 #5741)
@@ -18,19 +26,22 @@ firejail (0.9.73) baseline; urgency=low
   * modif: remove firemon --interface option (duplicating --net.print option)
   * modif: make private-lib a configure-time option, disabled by default (see
     --enable-private-lib) (#5727 #5732)
-  * modif: Improve --version/--help & print version on startup (#5829)
+  * modif: Improve --version/--help & print version on startup (#5829 #6172)
   * modif: improve errExit error messages (#5871)
   * modif: drop deprecated 'shell' option references (#5894)
   * modif: keep pipewire group unless nosound is used (#5992 #5993)
-  * modif: Lookup xauth in PATH (#6006 #6087)
-  * bugfix: qutebrowser: links will not open in the existing instance (#5601
-    #5618)
+  * modif: fcopy: Use lstat when copying directory (#5957)
+  * modif: populate /run/firejail while holding flock (#6307)
+  * removal: LTS and FIRETUNNEL support
   * bugfix: fix --hostname and --hosts-file commands
+  * bugfix: fix examples in firejail-local AppArmor profile (#5717)
   * bugfix: arp.c: ensure positive timeout on select(2) (#5806)
   * bugfix: Wrong syscall names for s390_pci_mmio_read and s390_pci_mmio_write
     (#5965 #5976)
   * bugfix: firejail --ls reports wrong file sizes for large files (#5982
     #6086)
+  * bugfix: fix various resource leaks (#6367)
+  * bugfix: profstats: fix restrict-namespaces max count (#6369)
   * build: auto-generate syntax files (#5627)
   * build: mark all phony targets as such (#5637)
   * build: mkdeb.sh: pass all arguments to ./configure (#5654)
@@ -50,6 +61,22 @@ firejail (0.9.73) baseline; urgency=low
   * build: codespell improvements (#5955)
   * build: add missing makefile dep & syntax improvements (#5956)
   * build: sort.py: use case-sensitive sorting (#6070)
+  * build: mkrpm.sh: append instead of override configure args (#6126)
+  * build: use CPPFLAGS instead of INCLUDE in compile targets (#6159)
+  * build: use full paths on compile/link targets (#6158)
+  * build: automatically generate header dependencies (#6164)
+  * build: improve main clean target (#6186)
+  * build: mkrpm.sh improvements (#6196)
+  * build: move errExit macro into inline function (#6217)
+  * build: allow overriding certain tools & sync targets with CI (#6222)
+  * build: reduce hardcoding and inconsistencies (#6230)
+  * build: sort.py: filter empty and duplicate items (#6261)
+  * build: fix "warning: "_FORTIFY_SOURCE" redefined" (#6282 #6283)
+  * build: sort.py: add -i/-n/-- options (#6290 #6339)
+  * build: add strip target and simplify install targets (#6342)
+  * build: remove clean dependency from cppcheck targets (#6343)
+  * build: allow overriding common tools (#6354)
+  * build: standardize install commands (#6366)
   * ci: always update the package db before installing packages (#5742)
   * ci: fix codeql unable to download its own bundle (#5783)
   * ci: split configure/build/install commands on gitlab (#5784)
@@ -58,9 +85,13 @@ firejail (0.9.73) baseline; urgency=low
   * ci: run for every branch instead of just master (#5815)
   * ci: upgrade debian:stretch to debian:buster (#5818)
   * ci: standardize apt-get update/install & misc improvements (#5857)
+  * ci: Update step-security/harden-runner and update allowed endpoints (#5953)
   * ci: whitelist paths, reorganize workflows & speed-up tests (#5960)
   * ci: fix dependabot duplicated workflow runs (#5984)
   * ci: allow running workflows manually (#6026)
+  * ci: re-enable sort.py (#6104)
+  * ci: add timeout limits (#6178)
+  * ci: make dependabot updates monthly and bump PR limit (#6338)
   * contrib/syntax: remove 'text/plain' from firejail-profile.lang.in (#6057
     #6059)
   * contrib/vim: match profile files more broadly (#5850)
@@ -71,11 +102,34 @@ firejail (0.9.73) baseline; urgency=low
   * docs: fix typos (#5693)
   * docs: markdown formatting and misc improvements (#5757)
   * docs: add uninstall instructions to README.md (#5812)
+  * docs: add precedence info to manpage & fix noblacklist example (#6358
+    #6359)
   * legal: selinux.c: Split Copyright notice & use same license as upstream
     (#5667)
+  * profiles: qutebrowser: fix links not opening in the existing instance
+    (#5601 #5618)
+  * profiles: clarify userns comments (#5686)
+  * profiles: bulk rename electron to electron-common (#5700)
+  * profiles: streamline seccomp socket comment (#5735)
+  * profiles: drop hostname option from all profiles (#5702)
+  * profiles: move read-only config entries to disable-common.inc (#5763)
+  * profiles: standardize on just "GTK" on comments (#5794)
+  * profiles: improvements to profiles using private (#5946)
   * profiles: standardize commented code and eol comments (#5987)
+  * profiles: disable-common: add more suid programs (#6049 #6051 #6052)
   * profiles: replace private-opt with whitelist & document private-opt issues
     (#6021)
+  * profiles: drop paths already in wusc (#6218)
+  * profiles: deny access to ~/.config/autostart (#6257)
+  * profiles: replace x11 socket blacklist with disable-X11.inc (#6286)
+  * profiles: sort blacklist sections (#6289)
+  * profiles: rename disable-X11.inc to disable-x11.inc (#6294)
+  * profiles: add allow-nodejs.inc to profile.template (#6298)
+  * profiles: add allow-php.inc to profile.template (#6299)
+  * profiles: clarify and add opengl-game to profile.template (#6300)
+  * profiles: allow-ssh: allow /etc/ssh/ssh_revoked_hosts (#6308 #6309)
+  * profiles: libreoffice: support signing documents with GPG (#6352 #6353)
+  * profiles: blacklist i3 IPC socket & dir except for i3 itself (#6361)
   * new profiles: fix-qdf, qpdf, zlib-flate, standard-notes, url-eater
  -- netblue30 <netblue30@yahoo.com>  Mon, 17 Jan 2023 09:00:00 -0500
 
@@ -256,7 +310,7 @@ firejail (0.9.68) baseline; urgency=low
  -- netblue30 <netblue30@yahoo.com>  Sun, 6 Feb 2022 09:00:00 -0500
 
 firejail (0.9.66) baseline; urgency=low
-  * deprecated --audit options, relpaced by jailcheck utility
+  * deprecated --audit options, replaced by jailcheck utility
   * deprecated follow-symlink-as-user from firejail.config
   * new firejail.config settings: private-bin, private-etc
   * new firejail.config settings: private-opt, private-srv

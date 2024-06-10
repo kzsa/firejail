@@ -8,9 +8,9 @@ on:
     branches-ignore:
       - 'dependabot/**'
     paths:
+      - '**.c'
+      - '**.h'
       - 'm4/**'
-      - 'src/**.c'
-      - 'src/**.h'
       - 'src/**.mk'
       - 'src/**Makefile'
       - .github/workflows/check-c.yml
@@ -22,9 +22,9 @@ on:
       - configure.ac
   pull_request:
     paths:
+      - '**.c'
+      - '**.h'
       - 'm4/**'
-      - 'src/**.c'
-      - 'src/**.h'
       - 'src/**.mk'
       - 'src/**Makefile'
       - .github/workflows/check-c.yml
@@ -43,9 +43,10 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 jobs:
   scan-build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -55,7 +56,7 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install clang-tools-14 and dependencies
@@ -66,17 +67,19 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=clang-14 ./configure --enable-fatal-warnings --enable-apparmor
-        --enable-selinux
+        ./configure CC=clang-14 SCAN_BUILD=scan-build-14
+        --prefix=/usr --enable-fatal-warnings
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: scan-build
-      run: scan-build-14 --status-bugs make
+      run: make scan-build
 
   cppcheck:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -86,24 +89,27 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install cppcheck
       run: sudo apt-get install -qy cppcheck
+    - name: configure
+      run: >
+        ./configure CPPCHECK='cppcheck -q'
+        || (cat config.log; exit 1)
     - run: cppcheck --version
     - name: cppcheck
-      run: >
-        cppcheck -q --force --error-exitcode=1 --enable=warning,performance
-        -i src/firejail/checkcfg.c -i src/firejail/main.c .
+      run: make cppcheck
 
   # new cppcheck version currently chokes on checkcfg.c and main.c, therefore
   # scan all files also with older cppcheck version from ubuntu 20.04.
   cppcheck_old:
     runs-on: ubuntu-20.04
+    timeout-minutes: 10
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -114,14 +120,18 @@ jobs:
           ppa.launchpad.net:80
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install cppcheck
       run: sudo apt-get install -qy cppcheck
+    - name: configure
+      run: >
+        ./configure CPPCHECK='cppcheck -q'
+        || (cat config.log; exit 1)
     - run: cppcheck --version
-    - name: cppcheck
-      run: cppcheck -q --force --error-exitcode=1 --enable=warning,performance .
+    - name: cppcheck-old
+      run: make cppcheck-old
 
   codeql-cpp:
     permissions:
@@ -129,10 +139,11 @@ jobs:
       contents: read
       security-events: write
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         disable-sudo: true
         egress-policy: block
@@ -143,14 +154,14 @@ jobs:
           uploads.github.com:443
 
     - name: Checkout repository
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
     - name: print env
       run: ./ci/printenv.sh
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@b374143c1149a9115d881581d29b8390bbcbb59c
+      uses: github/codeql-action/init@f079b8493333aace61c81488f8bd40919487bd9f
       with:
         languages: cpp
 
@@ -161,4 +172,4 @@ jobs:
       run: make -j "$(nproc)"
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@b374143c1149a9115d881581d29b8390bbcbb59c
+      uses: github/codeql-action/analyze@f079b8493333aace61c81488f8bd40919487bd9f

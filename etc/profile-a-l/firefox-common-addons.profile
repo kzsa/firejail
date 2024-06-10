@@ -76,8 +76,8 @@ whitelist ${HOME}/.wine-pipelight
 whitelist ${HOME}/.wine-pipelight64
 whitelist ${HOME}/.zotero
 whitelist ${HOME}/dwhelper
-whitelist /usr/share/lua
 whitelist /usr/share/lua*
+whitelist /usr/share/mpv
 
 # GNOME Shell integration (chrome-gnome-shell) needs dbus and python
 noblacklist ${HOME}/.local/share/gnome-shell

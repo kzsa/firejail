@@ -49,11 +49,12 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 jobs:
   test-main:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SHELL: /bin/bash
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -61,7 +62,7 @@ jobs:
           github.com:443
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
@@ -72,15 +73,16 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make -j "$(nproc)"
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version
     - run: make lab-setup
     - run: make test-seccomp-extra
     - run: make test-firecfg
@@ -96,11 +98,12 @@ jobs:
 
   test-fs:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SHELL: /bin/bash
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -108,7 +111,7 @@ jobs:
           github.com:443
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
@@ -119,26 +122,28 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make -j "$(nproc)"
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version
     - run: make lab-setup
     - run: make test-private-etc
     - run: make test-fs
 
   test-environment:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SHELL: /bin/bash
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -146,7 +151,7 @@ jobs:
           github.com:443
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
@@ -157,26 +162,28 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make -j "$(nproc)"
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version
     - run: make lab-setup
     - run: make test-environment
     - run: make test-profiles
 
   test-utils:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SHELL: /bin/bash
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -187,7 +194,7 @@ jobs:
           ppa.launchpadcontent.net:443
           www.debian.org:443
           www.debian.org:80
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
@@ -198,25 +205,27 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make -j "$(nproc)"
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version
     - run: make lab-setup
     - run: make test-utils
 
   test-network:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SHELL: /bin/bash
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -231,7 +240,7 @@ jobs:
           www.debian.org:443
           www.debian.org:80
           yahoo.com:1025
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
@@ -243,15 +252,16 @@ jobs:
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make -j "$(nproc)"
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version
     - run: make lab-setup
     - run: make test-fnetfilter
     - run: make test-sysutils

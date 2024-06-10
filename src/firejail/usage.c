@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -134,12 +134,12 @@ static const char *const usage_str =
 	"    --keep-shell-rc - do not copy shell rc files from /etc/skel\n"
 	"    --keep-var-tmp - /var/tmp directory is untouched.\n"
 #ifdef HAVE_LANDLOCK
-	"    --landlock - add basic rules to the Landlock ruleset.\n"
-	"    --landlock.proc=no|ro|rw - add an access rule for /proc to the Landlock ruleset.\n"
-	"    --landlock.read=path - add a read access rule for the path to the Landlock ruleset.\n"
-	"    --landlock.write=path - add a write access rule for the path to the Landlock ruleset.\n"
-	"    --landlock.special=path - add an access rule for the path to the Landlock ruleset for creating block/char devices, named pipes and sockets.\n"
-	"    --landlock.execute=path - add an execute access rule for the path to the Landlock ruleset.\n"
+	"    --landlock.enforce - enforce the Landlock ruleset.\n"
+	"    --landlock.fs.read=path - add a read access rule for the path to the Landlock ruleset.\n"
+	"    --landlock.fs.write=path - add a write access rule for the path to the Landlock ruleset.\n"
+	"    --landlock.fs.makeipc=path - add an access rule for the path to the Landlock ruleset for creating named pipes and sockets.\n"
+	"    --landlock.fs.makedev=path - add an access rule for the path to the Landlock ruleset for creating block/char devices.\n"
+	"    --landlock.fs.execute=path - add an execute access rule for the path to the Landlock ruleset.\n"
 #endif
 	"    --list - list all sandboxes.\n"
 #ifdef HAVE_FILE_TRANSFER
@@ -321,16 +321,16 @@ static const char *const usage_str =
 	"License GPL version 2 or later\n"
 	"Homepage: https://firejail.wordpress.com\n";
 
-void print_version(void) {
-	printf("firejail version %s\n\n", VERSION);
+void print_version(FILE *stream) {
+	fprintf(stream, "firejail version %s\n\n", VERSION);
 }
 
 void print_version_full(void) {
-	print_version();
+	print_version(stdout);
 	print_compiletime_support();
 }
 
 void usage(void) {
-	print_version();
+	print_version(stdout);
 	puts(usage_str);
 }

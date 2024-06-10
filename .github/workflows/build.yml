@@ -57,9 +57,10 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895
+      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -67,24 +68,24 @@ jobs:
           github.com:443
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies
       run: >
         sudo apt-get install -qy
-        gcc-12 libapparmor-dev libselinux1-dev expect xzdec whois
-        bridge-utils
+        gcc-12 libapparmor-dev libselinux1-dev
     - name: print env
       run: ./ci/printenv.sh
     - name: configure
       run: >
-        CC=gcc-12 ./configure --prefix=/usr --enable-fatal-warnings
-        --enable-analyzer --enable-apparmor --enable-selinux
+        ./configure CC=gcc-12
+        --prefix=/usr --enable-fatal-warnings --enable-analyzer
+        --enable-apparmor --enable-selinux
         || (cat config.log; exit 1)
     - name: make
       run: make
     - name: make install
       run: sudo make install
-    - name: print firejail version
-      run: command -V firejail && firejail --version
+    - name: print version
+      run: make print-version

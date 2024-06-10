@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Firejail Authors
+ * Copyright (C) 2014-2024 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -344,13 +344,6 @@ static const char *const compiletime_support =
 
 	"\n\t- file transfer support is "
 #ifdef HAVE_FILE_TRANSFER
-		"enabled"
-#else
-		"disabled"
-#endif
-
-	"\n\t- firetunnel support is "
-#ifdef HAVE_FIRETUNNEL
 		"enabled"
 #else
 		"disabled"
