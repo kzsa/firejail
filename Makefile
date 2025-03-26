@@ -231,6 +231,8 @@ ifeq ($(HAVE_CONTRIB_INSTALL),yes)
 	# vim syntax
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(datarootdir)/vim/vimfiles/ftdetect
 	$(INSTALL) -m 0644 -t $(DESTDIR)$(datarootdir)/vim/vimfiles/ftdetect contrib/vim/ftdetect/firejail.vim
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(datarootdir)/vim/vimfiles/ftplugin
+	$(INSTALL) -m 0644 -t $(DESTDIR)$(datarootdir)/vim/vimfiles/ftplugin contrib/vim/ftplugin/firejail.vim
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(datarootdir)/vim/vimfiles/syntax
 	$(INSTALL) -m 0644 -t $(DESTDIR)$(datarootdir)/vim/vimfiles/syntax contrib/syntax/files/firejail.vim
 	# gtksourceview language-specs
@@ -301,6 +303,7 @@ uninstall: config.mk
 	$(RM) $(DESTDIR)$(datarootdir)/bash-completion/completions/firecfg
 	$(RM) $(DESTDIR)$(datarootdir)/zsh/site-functions/_firejail
 	$(RM) $(DESTDIR)$(datarootdir)/vim/vimfiles/ftdetect/firejail.vim
+	$(RM) $(DESTDIR)$(datarootdir)/vim/vimfiles/ftplugin/firejail.vim
 	$(RM) $(DESTDIR)$(datarootdir)/vim/vimfiles/syntax/firejail.vim
 	$(RM) $(DESTDIR)$(datarootdir)/gtksourceview-5/language-specs/firejail-profile.lang
 	@echo "If you want to install a different version of firejail, you might also need to run 'rm -fr $(DESTDIR)$(sysconfdir)/firejail', see #2038."
@@ -376,11 +379,6 @@ cppcheck:
 	$(CPPCHECK) --force --error-exitcode=1 --enable=warning,performance \
 	  -i src/firejail/checkcfg.c -i src/firejail/main.c .
 
-# For cppcheck 1.x; see .github/workflows/check-c.yml
-.PHONY: cppcheck-old
-cppcheck-old:
-	$(CPPCHECK) --force --error-exitcode=1 --enable=warning,performance .
-
 .PHONY: scan-build
 scan-build: clean
 	$(SCAN_BUILD) --status-bugs $(MAKE)
@@ -400,8 +398,8 @@ codespell:
 print-env:
 	./ci/printenv.sh
 
-.PHONY: print-version
-print-version: config.mk
+.PHONY: installcheck
+installcheck: config.mk
 	command -V $(TARNAME) && $(TARNAME) --version
 
 #
@@ -452,8 +450,8 @@ test-apparmor:
 test-firecfg:
 	$(MAKE) -C test $(subst test-,,$@)
 
-
-# old gihub test; the new test is driven directly from .github/workflows/build.yml
+# old gihub test; the new test is driven directly from
+# .github/workflows/test.yml.
 .PHONY: test-github
 test-github: lab-setup test-profiles test-fcopy test-fnetfilter test-fs test-utils test-sysutils test-environment
 	echo "TEST COMPLETE"

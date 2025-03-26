@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -39,8 +39,10 @@ typedef enum {
 	DEV_VIDEO,
 	DEV_TV,
 	DEV_DVD,
+	DEV_TPM,
 	DEV_U2F,
-	DEV_INPUT
+	DEV_INPUT,
+	DEV_NTSYNC
 } DEV_TYPE;
 
 
@@ -52,7 +54,8 @@ typedef struct {
 
 static DevEntry dev[] = {
 	{"/dev/snd", RUN_DEV_DIR "/snd", DEV_SOUND},	// sound device
-	{"/dev/dri", RUN_DEV_DIR "/dri", DEV_3D},		// 3d device
+	{"/dev/dri", RUN_DEV_DIR "/dri", DEV_3D},		// 3d devices
+	{"/dev/kfd", RUN_DEV_DIR "/kfd", DEV_3D},
 	{"/dev/nvidia0", RUN_DEV_DIR "/nvidia0", DEV_3D},
 	{"/dev/nvidia1", RUN_DEV_DIR "/nvidia1", DEV_3D},
 	{"/dev/nvidia2", RUN_DEV_DIR "/nvidia2", DEV_3D},
@@ -78,6 +81,12 @@ static DevEntry dev[] = {
 	{"/dev/video9", RUN_DEV_DIR "/video9", DEV_VIDEO},
 	{"/dev/dvb", RUN_DEV_DIR "/dvb", DEV_TV}, // DVB (Digital Video Broadcasting) - TV device
 	{"/dev/sr0", RUN_DEV_DIR "/sr0", DEV_DVD}, // for DVD and audio CD players
+	{"/dev/tpm0", RUN_DEV_DIR "/tpm0", DEV_TPM}, // TPM (Trusted Platform Module) devices
+	{"/dev/tpm1", RUN_DEV_DIR "/tpm1", DEV_TPM},
+	{"/dev/tpm2", RUN_DEV_DIR "/tpm2", DEV_TPM},
+	{"/dev/tpm3", RUN_DEV_DIR "/tpm3", DEV_TPM},
+	{"/dev/tpm4", RUN_DEV_DIR "/tpm4", DEV_TPM},
+	{"/dev/tpm5", RUN_DEV_DIR "/tpm5", DEV_TPM},
 	{"/dev/hidraw0", RUN_DEV_DIR "/hidraw0", DEV_U2F},
 	{"/dev/hidraw1", RUN_DEV_DIR "/hidraw1", DEV_U2F},
 	{"/dev/hidraw2", RUN_DEV_DIR "/hidraw2", DEV_U2F},
@@ -90,6 +99,7 @@ static DevEntry dev[] = {
 	{"/dev/hidraw9", RUN_DEV_DIR "/hidraw9", DEV_U2F},
 	{"/dev/usb", RUN_DEV_DIR "/usb", DEV_U2F},	// USB devices such as Yubikey, U2F
 	{"/dev/input", RUN_DEV_DIR "/input", DEV_INPUT},
+	{"/dev/ntsync", RUN_DEV_DIR "/ntsync", DEV_NTSYNC},
 	{NULL, NULL, DEV_NONE}
 };
 
@@ -104,8 +114,10 @@ static void deventry_mount(void) {
 			    (dev[i].type == DEV_VIDEO && arg_novideo == 0) ||
 			    (dev[i].type == DEV_TV && arg_notv == 0) ||
 			    (dev[i].type == DEV_DVD && arg_nodvd == 0) ||
+			    (dev[i].type == DEV_TPM && arg_notpm == 0) ||
 			    (dev[i].type == DEV_U2F && arg_nou2f == 0) ||
-			    (dev[i].type == DEV_INPUT && arg_noinput == 0)) {
+			    (dev[i].type == DEV_INPUT && arg_noinput == 0) ||
+			    (dev[i].type == DEV_NTSYNC && arg_keep_dev_ntsync == 1)) {
 
 				int dir = is_dir(dev[i].run_fname);
 				if (arg_debug)
@@ -383,6 +395,15 @@ void fs_dev_disable_dvd(void) {
 	}
 }
 
+void fs_dev_disable_tpm(void) {
+	int i = 0;
+	while (dev[i].dev_fname != NULL) {
+		if (dev[i].type == DEV_TPM)
+			disable_file_or_dir(dev[i].dev_fname);
+		i++;
+	}
+}
+
 void fs_dev_disable_u2f(void) {
 	int i = 0;
 	while (dev[i].dev_fname != NULL) {
@@ -396,6 +417,15 @@ void fs_dev_disable_input(void) {
 	int i = 0;
 	while (dev[i].dev_fname != NULL) {
 		if (dev[i].type == DEV_INPUT)
+			disable_file_or_dir(dev[i].dev_fname);
+		i++;
+	}
+}
+
+void fs_dev_disable_ntsync(void) {
+	int i = 0;
+	while (dev[i].dev_fname != NULL) {
+		if (dev[i].type == DEV_NTSYNC)
 			disable_file_or_dir(dev[i].dev_fname);
 		i++;
 	}

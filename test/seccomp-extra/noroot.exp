@@ -1,6 +1,6 @@
 #!/usr/bin/expect -f
 # This file is part of Firejail project
-# Copyright (C) 2014-2024 Firejail Authors
+# Copyright (C) 2014-2025 Firejail Authors
 # License GPL v2
 
 set timeout 10
@@ -72,7 +72,7 @@ expect {
 send -- "cat /proc/self/gid_map | wc -l\r"
 expect {
 	timeout {puts "TESTING ERROR 12\n";exit}
-	"9"
+	"10"
 }
 
 
@@ -104,7 +104,7 @@ expect {
 send -- "cat /proc/self/gid_map | wc -l\r"
 expect {
 	timeout {puts "TESTING ERROR 17\n";exit}
-	"9"
+	"10"
 }
 
 # check seccomp disabled and all caps enabled

@@ -17,6 +17,9 @@ noblacklist ${HOME}/.mplayer
 noblacklist ${MUSIC}
 noblacklist ${VIDEOS}
 
+# Allow lua (blacklisted by disable-interpreters.inc)
+include allow-lua.inc
+
 include disable-common.inc
 include disable-devel.inc
 include disable-exec.inc
@@ -24,8 +27,11 @@ include disable-interpreters.inc
 include disable-programs.inc
 include disable-xdg.inc
 
+whitelist /usr/share/lua*
+whitelist /usr/share/mpv
 whitelist /usr/share/smplayer
 whitelist /usr/share/smtube
+whitelist /usr/share/vlc
 include whitelist-usr-share-common.inc
 include whitelist-var-common.inc
 

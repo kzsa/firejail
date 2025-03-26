@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of Firejail project
-# Copyright (C) 2014-2024 Firejail Authors
+# Copyright (C) 2014-2025 Firejail Authors
 # License GPL v2
 
 # GCOV test setup
@@ -27,7 +27,7 @@ make -j "$(nproc)" &&
 sudo make install
 
 rm -fr gcov-dir gcov-file
-make print-version
+make installcheck
 gcov_generate
 
 make test-firecfg | grep TESTING

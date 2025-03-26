@@ -33,22 +33,25 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481
       with:
         disable-sudo: true
         egress-policy: block
         allowed-endpoints: >
           github.com:443
 
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: print env
       run: ./ci/printenv.sh
     - run: python3 --version
 
     - name: sort.py
       run: >
+        set +e;
         ./ci/check/profiles/sort.py
-        etc/inc/*.inc etc/{profile-a-l,profile-m-z}/*.profile
+        etc/inc/*.inc etc/{profile-a-l,profile-m-z}/*.profile;
+        echo;
+        git diff --exit-code
 # Currently broken (see #5610)
 #   - name: private-etc-always-required.sh
 #     run: >

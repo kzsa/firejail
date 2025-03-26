@@ -31,7 +31,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481
       with:
         disable-sudo: true
         egress-policy: block
@@ -44,16 +44,16 @@ jobs:
           uploads.github.com:443
 
     - name: Checkout repository
-      uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
     - name: print env
       run: ./ci/printenv.sh
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@f079b8493333aace61c81488f8bd40919487bd9f
+      uses: github/codeql-action/init@b56ba49b26e50535fa1e7f7db0f4f7b4bf65d80d
       with:
         languages: python
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@f079b8493333aace61c81488f8bd40919487bd9f
+      uses: github/codeql-action/analyze@b56ba49b26e50535fa1e7f7db0f4f7b4bf65d80d

@@ -21,6 +21,9 @@ noblacklist ${HOME}/.local/state/mpv
 noblacklist ${HOME}/.mplayer
 noblacklist ${VIDEOS}
 
+# Allow lua (blacklisted by disable-interpreters.inc)
+include allow-lua.inc
+
 include disable-common.inc
 include disable-devel.inc
 include disable-exec.inc
@@ -47,8 +50,11 @@ whitelist ${HOME}/.local/share/totem
 whitelist ${HOME}/.local/share/xplayer
 whitelist ${HOME}/.local/state/mpv
 whitelist ${HOME}/.mplayer
+whitelist /usr/share/lua*
 whitelist /usr/share/mpv
 whitelist /usr/share/qtchooser
+whitelist /usr/share/smplayer
+whitelist /usr/share/vlc
 include whitelist-common.inc
 include whitelist-run-common.inc
 include whitelist-runuser-common.inc

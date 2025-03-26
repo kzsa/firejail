@@ -10,13 +10,16 @@
 [![Codespell](https://github.com/netblue30/firejail/workflows/Codespell/badge.svg)](https://github.com/netblue30/firejail/actions?query=workflow%3ACodespell)
 [![Packaging status (Repology)](https://repology.org/badge/tiny-repos/firejail.svg)](https://repology.org/project/firejail/versions)
 
-Firejail is a SUID sandbox program that reduces the risk of security breaches
-by restricting the running environment of untrusted applications using Linux
-namespaces, seccomp-bpf and Linux capabilities.  It allows a process and all
-its descendants to have their own private view of the globally shared kernel
-resources, such as the network stack, process table, mount table.  Firejail can
-work in a SELinux or AppArmor environment, and it is integrated with Linux
-Control Groups.
+Firejail is a lightweight security tool intended to protect a Linux system by
+setting up a restricted environment for running (potentially untrusted)
+applications.
+
+More specifically, it is an SUID sandbox program that reduces the risk of
+security breaches by using Linux namespaces, seccomp-bpf and Linux
+capabilities.  It allows a process and all its descendants to have their own
+private view of the globally shared kernel resources, such as the network
+stack, process table and mount table.  Firejail can work in an SELinux or
+AppArmor environment, and it is integrated with Linux Control Groups.
 
 Written in C with virtually no dependencies, the software runs on any Linux
 computer with a 3.x kernel version or newer.  It can sandbox any type of
@@ -35,7 +38,15 @@ and available on any Linux computer.
 <tr>
 
 <td>
-<a href="https://odysee.com/@netblue30:9/firefox:c" target="_blank">
+<a href="https://odysee.com/@netblue30:9/install" target="_blank">
+<img src="https://thumbs.odycdn.com/f19bcfa08c2b35658dc18f4e2fd63f3f.webp"
+alt="Quick Start" width="240" height="142" border="10" />
+<br/>Quick Start
+</a>
+</td>
+
+<td>
+<a href="https://odysee.com/@netblue30:9/firefox" target="_blank">
 <img src="https://thumbs.odycdn.com/acf4b1c66737feb97640fb1d28a7daa6.png"
 alt="Advanced Browser Security" width="240" height="142" border="10" />
 <br/>Advanced Browser Security
@@ -43,18 +54,10 @@ alt="Advanced Browser Security" width="240" height="142" border="10" />
 </td>
 
 <td>
-<a href="https://odysee.com/@netblue30:9/nonet:7" target="_blank">
-<img src="https://thumbs.odycdn.com/5be2964201c31689ee8f78cb9f35e89a.png"
-alt="How To Disable Network Access" width="240" height="142" border="10" />
-<br/>How To Disable Network Access
-</a>
-</td>
-
-<td>
-<a href="https://odysee.com/@netblue30:9/divested:2" target="_blank">
-<img src="https://thumbs.odycdn.com/f30ece33a6547af9ae48244f4ba73028.png"
-alt="Deep Dive" width="240" height="142" border="10" />
-<br/>Deep Dive
+<a href="https://odysee.com/@netblue30:9/tor" target="_blank">
+<img src="https://thumbs.odycdn.com/f6aa82bd7b86b2f17caed03ccb870d2b.webp"
+alt="Tor Browser Security" width="240" height="142" border="10" />
+<br/>Tor Browser Security
 </a>
 </td>
 
@@ -87,6 +90,10 @@ Debian stable (bullseye): We recommend to use the
 [backports](https://packages.debian.org/bullseye-backports/firejail) package.
 
 ### Ubuntu
+
+Note: The PPA recommendation is mainly for firejail itself; it should be fine
+to install firetools and firejail-related tools directly from the distribution
+if they are not in the PPA as they tend to be updated less frequently.
 
 For Ubuntu 18.04+ and derivatives (such as Linux Mint), users are **strongly
 advised** to use the
@@ -148,7 +155,9 @@ The version can be checked with `firejail --version` after installing.
 You can also install one of the [released
 packages](https://github.com/netblue30/firejail/releases).
 
-Or clone the source code from our git repository and build manually:
+## Building
+
+You can clone the source code from this git repository and build manually:
 
 ```sh
 git clone https://github.com/netblue30/firejail.git
@@ -156,15 +165,19 @@ cd firejail
 ./configure && make && sudo make install-strip
 ```
 
-On Debian/Ubuntu you will need to install git and gcc.  AppArmor development
-libraries and pkg-config are required when using the `--enable-apparmor`
-./configure option:
+On Debian/Ubuntu you will need to install git and gcc.
+
+To build with AppArmor support (which is usually used on Debian, Ubuntu,
+openSUSE and derivatives), install the AppArmor development libraries and
+pkg-config and use the `--enable-apparmor` ./configure option:
 
 ```sh
 sudo apt-get install git build-essential libapparmor-dev pkg-config gawk
 ```
 
-For `--selinux` option, add libselinux1-dev (libselinux-devel for Fedora).
+To build with SELinux support (which is usually used on Fedora, RHEL and
+derivatives), install libselinux1-dev (libselinux-devel on Fedora) and use the
+`--enable-selinux` ./configure option.
 
 Detailed information on using firejail from git is available on the
 [wiki](https://github.com/netblue30/firejail/wiki/Using-firejail-from-git).
@@ -254,64 +267,12 @@ See `man firecfg` for details.
 Note: Broken symlinks are ignored when searching for an executable in `$PATH`,
 so uninstalling without doing the above should not cause issues.
 
-## Latest released version: 0.9.72
+## Latest released version: 0.9.74
 
-## Current development version: 0.9.73
+## Current development version: 0.9.75
 
-### --keep-shell-rc
 
-```text
-       --keep-shell-rc
-              By default, when using a private home directory, firejail copies
-              files  from the system's user home template (/etc/skel) into it,
-              which overrides attempts to whitelist the original  files  (such
-              as  ~/.bashrc and ~/.zshrc).  This option disables this feature,
-              and enables the user to whitelist the original files.
-```
-
-### private-etc rework
-
-```text
-       --private-etc, --private-etc=file,directory,@group
-              The files installed by --private-etc are copies of the original
-              system files from /etc directory.  By default, the command
-              brings in a skeleton of files and directories used by most
-              console tools:
-
-              $ firejail --private-etc dig debian.org
-
-              For X11/GTK/QT/Gnome/KDE  programs add @x11 group as a
-              parameter. Example:
-
-              $ firejail --private-etc=@x11,gcrypt,python* gimp
-
-              gcrypt and /etc/python* directories are not part of the generic
-              @x11 group.  File globbing is supported.
-
-              For games, add @games group:
-
-              $ firejail --private-etc=@games,@x11 warzone2100
-
-              Sound and networking files are included automatically, unless
-              --nosound or --net=none are specified.  Files for encrypted
-              TLS/SSL protocol are in @tls-ca group.
-
-              $ firejail --private-etc=@tls-ca,wgetrc wget https://debian.org
-
-              Note: The easiest way to extract the list of /etc files accessed
-              by your program is using strace utility:
-
-              $ strace /usr/bin/transmission-qt 2>&1 | grep open | grep etc
-```
-
-We keep the list of groups in
-[src/include/etc_groups.h](src/include/etc_groups.h).
-
-Discussion:
-
-* [private-etc rework](https://github.com/netblue30/firejail/discussions/5610)
-
-### Landlock support
+### Landlock support - ongoing/experimental
 
 * Added on #6078, which is based on #5315 from ChrysoliteAzalea/landlock
 * Compile-time detection based on linux/landlock.h - if the header is found,
@@ -369,34 +330,37 @@ Run it over the profiles in /etc/profiles:
 $ /usr/lib/firejail/profstats /etc/firejail/*.profile
 No include .local found in /etc/firejail/noprofile.profile
 Warning: multiple caps in /etc/firejail/tidal-hifi.profile
+Warning: multiple caps in /etc/firejail/tqemu.profile
 Warning: multiple caps in /etc/firejail/transmission-daemon.profile
+Warning: cannot open youtube-music-desktop-app or /etc/firejail/youtube-music-desktop-app, while processing /etc/firejail/youtube-music-desktop-app.profile
+No include .local found in /etc/firejail/youtube-music-desktop-app.profile
 
 Stats:
-    profiles			1249
-    include local profile	1248   (include profile-name.local)
-    include globals		1217   (include globals.local)
-    blacklist ~/.ssh		1117   (include disable-common.inc)
-    seccomp			1127
-    capabilities		1242
-    noexec			1125   (include disable-exec.inc)
-    noroot			1030
-    memory-deny-write-execute	285
-    restrict-namespaces		981
-    apparmor			788
-    private-bin			750
-    private-dev			1090
-    private-etc			763
-    private-lib			78
-    private-tmp			959
-    whitelist home directory	609
-    whitelist var		907   (include whitelist-var-common.inc)
-    whitelist run/user		1214   (include whitelist-runuser-common.inc
+    profiles			1324
+    include local profile	1323   (include profile-name.local)
+    include globals		1290   (include globals.local)
+    blacklist ~/.ssh		1183   (include disable-common.inc)
+    seccomp			1195
+    capabilities		1317
+    noexec			1197   (include disable-exec.inc)
+    noroot			1092
+    memory-deny-write-execute	320
+    restrict-namespaces		1034
+    apparmor			850
+    private-bin			801
+    private-dev			1158
+    private-etc			824
+    private-lib			85
+    private-tmp			1020
+    whitelist home directory	654
+    whitelist var		965   (include whitelist-var-common.inc)
+    whitelist run/user		1287   (include whitelist-runuser-common.inc
 					or blacklist ${RUNUSER})
-    whitelist usr/share		690   (include whitelist-usr-share-common.inc
-    net none			420
-    dbus-user none 		705
-    dbus-user filter 		164
-    dbus-system none 		889
+    whitelist usr/share		746   (include whitelist-usr-share-common.inc
+    net none			450
+    dbus-user none 		754
+    dbus-user filter 		196
+    dbus-system none 		956
     dbus-system filter 		13
 
 ```

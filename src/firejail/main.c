@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -114,6 +114,7 @@ char *arg_netfilter6_file = NULL;		// netfilter6 file
 char *arg_netns = NULL;			// "ip netns"-created network namespace to use
 int arg_doubledash = 0;			// double dash
 int arg_private_dev = 0;			// private dev directory
+int arg_keep_dev_ntsync = 0;			// preserve /dev/ntsync
 int arg_keep_dev_shm = 0;			// preserve /dev/shm
 int arg_private_etc = 0;			// private etc directory
 int arg_private_opt = 0;			// private opt directory
@@ -155,6 +156,7 @@ int arg_noprofile = 0; // use default.profile if none other found/specified
 int arg_memory_deny_write_execute = 0;		// block writable and executable memory
 int arg_notv = 0;	// --notv
 int arg_nodvd = 0; // --nodvd
+int arg_notpm = 0; // --notpm
 int arg_nou2f = 0; // --nou2f
 int arg_noinput = 0; // --noinput
 int arg_deterministic_exit_code = 0;	// always exit with first child's exit status
@@ -1109,6 +1111,12 @@ int main(int argc, char **argv, char **envp) {
 	if (check_arg(argc, argv, "--quiet", 1) || (env_quiet && strcmp(env_quiet, "yes") == 0))
 		arg_quiet = 1;
 
+	// process --debug
+	if (check_arg(argc, argv, "--debug", 1)) {
+		arg_debug = 1;
+		arg_quiet = 0;
+	}
+
 	// check if the user is allowed to use firejail
 	init_cfg(argc, argv);
 
@@ -1123,6 +1131,7 @@ int main(int argc, char **argv, char **envp) {
 	// If LXC is detected, start firejail sandbox
 	// otherwise try to detect a PID namespace by looking under /proc for specific kernel processes and:
 	//	- start the application in a /bin/bash shell
+#ifdef HAVE_SANDBOX_CHECK
 	if (check_namespace_virt() == 0) {
 		EUID_ROOT();
 		int rv = check_kernel_procs();
@@ -1138,6 +1147,9 @@ int main(int argc, char **argv, char **envp) {
 			__builtin_unreachable();
 		}
 	}
+#else
+	fwarning("firejail was built with --disable-sandbox-check, this is only intended for development\n");
+#endif
 
 	// profile builder
 	if (check_arg(argc, argv, "--build", 0)) // supports both --build and --build=filename
@@ -2022,6 +2034,9 @@ int main(int argc, char **argv, char **envp) {
 		else if (strcmp(argv[i], "--private-dev") == 0) {
 			arg_private_dev = 1;
 		}
+		else if (strcmp(argv[i], "--keep-dev-ntsync") == 0) {
+			arg_keep_dev_ntsync = 1;
+		}
 		else if (strcmp(argv[i], "--keep-dev-shm") == 0) {
 			arg_keep_dev_shm = 1;
 		}
@@ -2209,6 +2224,8 @@ int main(int argc, char **argv, char **envp) {
 			arg_notv = 1;
 		else if (strcmp(argv[i], "--nodvd") == 0)
 			arg_nodvd = 1;
+		else if (strcmp(argv[i], "--notpm") == 0)
+			arg_notpm = 1;
 		else if (strcmp(argv[i], "--nou2f") == 0)
 			arg_nou2f = 1;
 		else if (strcmp(argv[i], "--noinput") == 0)
@@ -3216,6 +3233,15 @@ int main(int argc, char **argv, char **envp) {
 			// add input group
 			if (!arg_noinput) {
 				g = get_group_id("input");
+				if (g) {
+					sprintf(ptr, "%d %d 1\n", g, g);
+					ptr += strlen(ptr);
+				}
+			}
+
+			// add plugdev group
+			if (!arg_nou2f) {
+				g = get_group_id("plugdev");
 				if (g) {
 					sprintf(ptr, "%d %d 1\n", g, g);
 					ptr += strlen(ptr);

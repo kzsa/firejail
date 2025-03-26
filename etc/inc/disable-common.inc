@@ -171,6 +171,10 @@ blacklist ${RUNUSER}/gsconnect
 blacklist ${RUNUSER}/i3/ipc-socket.*
 blacklist /tmp/i3-*/ipc-socket.*
 
+# sway IPC socket (allows arbitrary shell script execution)
+blacklist ${RUNUSER}/sway-ipc.*
+blacklist /tmp/sway-ipc.*
+
 # systemd
 blacklist ${HOME}/.config/systemd
 blacklist ${HOME}/.local/share/systemd
@@ -341,6 +345,8 @@ read-only ${HOME}/.cargo/env
 read-only ${HOME}/.config/mpv
 read-only ${HOME}/.config/msmtp
 read-only ${HOME}/.config/nano
+read-only ${HOME}/.config/ncmpcpp/config
+read-only ${HOME}/.config/nsxiv/exec
 read-only ${HOME}/.config/nvim
 read-only ${HOME}/.config/pkcs11
 read-only ${HOME}/.dotfiles
@@ -680,6 +686,10 @@ blacklist /usr/lib/snapd
 blacklist /var/lib/snapd
 blacklist /var/snap
 
+# bubblejail
+blacklist ${HOME}/.config/bubblejail
+blacklist ${HOME}/.local/share/bubblejail
+
 # mail directories used by mutt
 blacklist ${HOME}/.Mail
 blacklist ${HOME}/.mail
@@ -725,9 +735,6 @@ blacklist ${RUNUSER}/*.lock
 blacklist ${RUNUSER}/inaccessible
 blacklist ${RUNUSER}/pk-debconf-socket
 blacklist ${RUNUSER}/update-notifier.pid
-
-# tor-browser
-blacklist ${HOME}/.local/opt/tor-browser
 
 # pass utility (pass package in Debian etc.)
 blacklist ${HOME}/.password-store

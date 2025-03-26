@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -1101,6 +1101,9 @@ int sandbox(void* sandbox_arg) {
 	if (arg_nodvd)
 		fs_dev_disable_dvd();
 
+	if (arg_notpm)
+		fs_dev_disable_tpm();
+
 	if (arg_nou2f)
 		fs_dev_disable_u2f();
 
@@ -1109,6 +1112,9 @@ int sandbox(void* sandbox_arg) {
 
 	if (arg_noinput)
 		fs_dev_disable_input();
+
+	if (!arg_keep_dev_ntsync)
+		fs_dev_disable_ntsync();
 
 	//****************************
 	// set DNS

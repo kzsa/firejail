@@ -15,12 +15,16 @@
 
 noblacklist /sys/fs
 noblacklist /sys/module
+nowhitelist /sys/module/nvidia*
+ignore read-only /sys/module/nvidia*
 
 allow-debuggers
 allusers
 keep-config-pulse
+keep-dev-ntsync
 keep-dev-shm
 keep-fd all
+keep-shell-rc
 keep-var-tmp
 writable-etc
 writable-run-user

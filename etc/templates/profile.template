@@ -175,6 +175,7 @@ include globals.local
 #noprinters
 #noroot
 #nosound
+#notpm
 #notv
 #nou2f
 #novideo
@@ -194,6 +195,7 @@ include globals.local
 ##x11 none
 
 #disable-mnt
+##keep-dev-ntsync
 ##private
 # It's common practice to refer to the python executable(s) in private-bin with `python*`, which covers both v2 and v3
 #private-bin PROGRAMS

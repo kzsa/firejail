@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -138,6 +138,7 @@ void build_profile(int argc, char **argv, int index, FILE *fp) {
 		fprintf(fp, "#noinput\t# disable input devices\n");
 		fprintf(fp, "nonewprivs\n");
 		fprintf(fp, "noroot\n");
+		fprintf(fp, "#notpm\t# disable TPM devices\n");
 		fprintf(fp, "#notv\t# disable DVB TV devices\n");
 		fprintf(fp, "#nou2f\t# disable U2F devices\n");
 		fprintf(fp, "#novideo\t# disable video capture devices\n");

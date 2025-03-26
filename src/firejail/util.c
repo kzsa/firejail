@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -238,6 +238,11 @@ static void clean_supplementary_groups(gid_t gid) {
 	if (!arg_noinput) {
 		copy_group_ifcont("input", groups, ngroups,
 		                  new_groups, &new_ngroups, MAX_GROUPS);
+	}
+
+	if (!arg_nou2f) {
+		copy_group_ifcont("plugdev", groups, ngroups,
+				  new_groups, &new_ngroups, MAX_GROUPS);
 	}
 
 	if (new_ngroups) {

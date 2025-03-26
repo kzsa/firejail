@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -129,6 +129,7 @@ static const char *const usage_str =
 #endif
 	"    --join-or-start=name|pid - join the sandbox or start a new one.\n"
 	"    --keep-config-pulse - disable automatic ~/.config/pulse init.\n"
+	"    --keep-dev-ntsync - /dev/ntsync character device is untouched (even with --private-dev).\n"
 	"    --keep-dev-shm - /dev/shm directory is untouched (even with --private-dev).\n"
 	"    --keep-fd - inherit open file descriptors to sandbox.\n"
 	"    --keep-shell-rc - do not copy shell rc files from /etc/skel\n"
@@ -189,8 +190,8 @@ static const char *const usage_str =
 	"    --noroot - install a user namespace with only the current user.\n"
 #endif
 	"    --nosound - disable sound system.\n"
-	"    --noautopulse - disable automatic ~/.config/pulse init.\n"
 	"    --novideo - disable video devices.\n"
+	"    --notpm - disable TPM devices.\n"
 	"    --nou2f - disable U2F devices.\n"
 	"    --nowhitelist=filename - disable whitelist for file or directory.\n"
 	"    --oom=value - configure OutOfMemory killer for the sandbox\n"

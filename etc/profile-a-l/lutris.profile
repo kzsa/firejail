@@ -6,6 +6,11 @@ include lutris.local
 # Persistent global definitions
 include globals.local
 
+# If you use gamescope, add the following to lutris.local to work around a bug
+# (see #6191):
+#ignore noroot
+#ignore private-tmp
+
 noblacklist ${PATH}/llvm*
 noblacklist ${HOME}/Games
 noblacklist ${HOME}/.cache/lutris
@@ -68,12 +73,13 @@ nogroups
 nonewprivs
 noroot
 notv
-nou2f
+#nou2f # may break gamepads in certain games (see #6523)
 novideo
 protocol unix,inet,inet6,netlink
 seccomp !clone3,!modify_ldt,!process_vm_readv,!ptrace
 seccomp.32 !modify_ldt
 
+keep-dev-ntsync
 # Add the next line to your lutris.local if you do not need controller support.
 #private-dev
 private-tmp

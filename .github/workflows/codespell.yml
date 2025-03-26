@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 5
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -34,7 +34,7 @@ jobs:
           packages.microsoft.com:443
           ppa.launchpadcontent.net:443
           security.ubuntu.com:80
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: update package information
       run: sudo apt-get update -qy
     - name: install dependencies

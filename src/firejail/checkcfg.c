@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -400,6 +400,13 @@ static const char *const compiletime_support =
 
 	"\n\t- private-cache and tmpfs as user "
 #ifdef HAVE_USERTMPFS
+		"enabled"
+#else
+		"disabled"
+#endif
+
+	"\n\t- sandbox check is "
+#ifdef HAVE_SANDBOX_CHECK
 		"enabled"
 #else
 		"disabled"

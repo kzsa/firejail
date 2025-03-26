@@ -12,8 +12,8 @@
 #
 
 AC_PREREQ([2.68])
-AC_INIT([firejail], [0.9.73], [netblue30@protonmail.com], [],
-    [https://firejail.wordpress.com])
+AC_INIT([firejail], [0.9.75], [https://github.com/netblue30/firejail/issues],
+    [], [https://firejail.wordpress.com])
 
 AC_CONFIG_SRCDIR([src/firejail/main.c])
 AC_CONFIG_MACRO_DIR([m4])
@@ -69,6 +69,16 @@ AS_IF([test "x$enable_sanitizer" != "xno" ], [
 	], [AC_MSG_ERROR([sanitizer not supported: $enable_sanitizer])])
 ])
 
+HAVE_SANDBOX_CHECK=""
+AC_SUBST([HAVE_SANDBOX_CHECK])
+AC_ARG_ENABLE([sandbox-check],
+    [AS_HELP_STRING([--disable-sandbox-check],
+        [disable checking if firejail is running within a sandbox, only use
+         this when developing firejail inside of a sandbox])])
+AS_IF([test "x$enable_sandbox_check" != "xno"], [
+	HAVE_SANDBOX_CHECK="-DHAVE_SANDBOX_CHECK"
+])
+
 HAVE_IDS=""
 AC_SUBST([HAVE_IDS])
 AC_ARG_ENABLE([ids],
@@ -119,7 +129,16 @@ AS_IF([test "x$enable_dbusproxy" != "xno"], [
 	HAVE_DBUSPROXY="-DHAVE_DBUSPROXY"
 ])
 
-# overlayfs features temporarily disabled pending fixes
+# The --overlay and related options are not supported anymore due to security
+# concerns (see CVE-2021-26910 and #4178), issues on newer kernels (see #2799)
+# and overall lack of interest in fixing and maintaining them.
+#
+# Support is unlikely to be restored for the foreseeable future unless someone
+# picks up the work, as it would require auditing the overlayfs code to ensure
+# that it is secure and that it works properly.
+#
+# It is highly recommended to leave this option disabled; the overlayfs code
+# that remains is only intended for testing/debugging purposes.
 HAVE_OVERLAYFS=""
 AC_SUBST([HAVE_OVERLAYFS])
 #AC_ARG_ENABLE([overlayfs],
@@ -324,6 +343,7 @@ Features:
    overlayfs support: $HAVE_OVERLAYFS
    private home support: $HAVE_PRIVATE_HOME
    private lib support: $HAVE_PRIVATE_LIB
+   sandbox check: $HAVE_SANDBOX_CHECK
    SELinux labeling support: $HAVE_SELINUX
    user namespace: $HAVE_USERNS
    X11 sandboxing support: $HAVE_X11

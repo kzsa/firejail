@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -59,6 +59,8 @@ static const SyscallEntry syslist[] = {
 #include "../include/syscall_i386.h"
 #elif defined(__arm__)
 #include "../include/syscall_armeabi.h"
+#elif defined(__aarch64__)
+#include "../include/syscall_aarch64.h"
 #else
 #warning "Please submit a syscall table for your architecture"
 #endif

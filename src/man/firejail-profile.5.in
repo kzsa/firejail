@@ -243,12 +243,26 @@ host filesystem. Each line describes a file/directory that is inaccessible
 a tmpfs mounted on top of an existing directory (\fBtmpfs\fR),
 or mount-bind a directory or file on top of another directory or file (\fBbind\fR).
 Use \fBprivate\fR to set private mode.  File globbing is supported, and PATH and
-HOME directories are searched, see the \fBfirejail\f(1) \fBFILE GLOBBING\fR section
+HOME directories are searched, see the \fBfirejail\fR(1) \fBFILE GLOBBING\fR section
 for more details.
 Examples:
 .TP
 \fBblacklist file_or_directory
-Blacklist directory or file. Examples:
+Blacklist directory or file. This makes a file or directory
+completely inaccessible. All other files and directories are unaffected.
+The blacklisted file or directory is still visible on the filesystem,
+even if it's inaccessible.
+.br
+
+.br
+Symbolic link handling: Blacklisting a path that is a symbolic link will also
+blacklist the path that it points to.
+For example, if ~/foo is blacklisted and it points to /bar, then /bar will also
+be blacklisted.
+.br
+
+.br
+Examples:
 .br
 
 .br
@@ -284,6 +298,12 @@ Disable /mnt, /media, /run/mount and /run/media access.
 \fBkeep-config-pulse
 Disable automatic ~/.config/pulse init, for complex setups such as remote
 pulse servers or non-standard socket paths.
+.TP
+\fBkeep-dev-ntsync
+Allow access to the /dev/ntsync character device (even with \fBprivate-dev\fR),
+which is blocked by default.
+This device is mostly intended to increase performance and compatibility when
+running certain programs through Wine.
 .TP
 \fBkeep-dev-shm
 /dev/shm directory is untouched (even with private-dev).
@@ -382,9 +402,11 @@ Set working directory inside jail to the home directory, and failing that, the r
 Set working directory inside the jail. Full directory path is required. Symbolic links are not allowed.
 .TP
 \fBprivate-dev
-Create a new /dev directory. Only disc, dri, dvb, hidraw, null, full, zero, tty, pts, ptmx,
-random, snd, urandom, video, log, shm and usb devices are available.
-Use the options no3d, nodvd, nosound, notv, nou2f and novideo for additional restrictions.
+Create a new /dev directory.
+Only disc, dri, dvb, full, hidraw, log, null, ptmx, pts, random, shm, snd, tpm,
+tty, urandom, usb, video and zero devices are available.
+Use the options no3d, nodvd, nosound, notpm, notv, nou2f and novideo for
+additional restrictions.
 
 .TP
 \fBprivate-etc file,directory
@@ -450,16 +472,36 @@ Mount an empty tmpfs filesystem on top of directory. Directories outside user ho
 Blacklist violations logged to syslog.
 .TP
 \fBwhitelist file_or_directory
-Whitelist directory or file. A temporary file system is mounted on the top directory, and the
-whitelisted files are mount-binded inside. Modifications to whitelisted files are persistent,
-everything else is discarded when the sandbox is closed. The top directory can be
-all directories in / (except /proc and /sys), /sys/module, /run/user/$UID, $HOME and
-all directories in /usr.
+Whitelist directory or file. A temporary file system is mounted on the top directory.
+In the context of firejail, top directory means, if the whitelisted file's path is
+for example /etc/somedir/somefile, then the top directory would be /etc.
+All other top directories like /opt, /usr and so on, haven't changed, so all files there
+are still accessible, unless a file or directory inside them is also whitelisted.
+This is why sometimes it's beneficial to use blacklist in combination with whitelist,
+if used for different top directories.
 .br
 
 .br
-Symbolic link handling: with the exception of user home, both the link and the real file should be in
-the same top directory. For user home, both the link and the real file should be owned by the user.
+The whitelisted files are mount-binded inside. Modifications to whitelisted files are
+persistent, everything else in the same top directory is discarded when the sandbox is closed.
+.br
+
+.br
+The top directory can be most directories in /, but there are some special cases.
+The /proc and /sys top directories aren't allowed, but /sys/module is allowed.
+Also /run/user/$UID, $HOME and all directories in /usr are treated as a top directory.
+.br
+
+.br
+Symbolic link handling: Whitelisting a path that is a symbolic link will also
+whitelist the path that it points to.
+For example, if ~/foo is whitelisted and it points to ~/bar, then ~/bar will
+also be whitelisted.
+.br
+Restrictions: With the exception of the user home directory, both the link and
+the real file should be in the same top directory.
+For symbolic links in the user home directory, both the link and the real file
+should be owned by the user.
 
 .TP
 \fBwhitelist-ro file_or_directory
@@ -509,30 +551,30 @@ Blacklist all Linux capabilities.
 Whitelist given Linux capabilities.
 #ifdef HAVE_LANDLOCK
 .TP
-\fBlandlock.enforce (experimental)
+\fBlandlock.enforce\fR (experimental)
 Enforce the Landlock ruleset.
 .PP
 Without it, the other Landlock commands have no effect.
 .TP
-\fBlandlock.fs.read path (experimental)
+\fBlandlock.fs.read path\fR (experimental)
 Create a Landlock ruleset (if it doesn't already exist) and add a read access
 rule for path.
 .TP
-\fBlandlock.fs.write path (experimental)
+\fBlandlock.fs.write path\fR (experimental)
 Create a Landlock ruleset (if it doesn't already exist) and add a write access
 rule for path.
 .TP
-\fBlandlock.fs.makeipc path (experimental)
+\fBlandlock.fs.makeipc path\fR (experimental)
 Create a Landlock ruleset (if it doesn't already exist) and add a rule that
 allows the creation of named pipes (FIFOs) and Unix domain sockets beneath
 the given path.
 .TP
-\fBlandlock.fs.makedev path (experimental)
+\fBlandlock.fs.makedev path\fR (experimental)
 Create a Landlock ruleset (if it doesn't already exist) and add a rule that
 allows the creation of block devices and character devices beneath the given
 path.
 .TP
-\fBlandlock.fs.execute path (experimental)
+\fBlandlock.fs.execute path\fR (experimental)
 Create a Landlock ruleset (if it doesn't already exist) and add an execution
 permission rule for path.
 #endif
@@ -666,20 +708,20 @@ Enable filtered access to the system DBus. Filters can be specified with the dbu
 \fBdbus-system none
 Disable access to the system DBus. Once access is disabled, it cannot be relaxed to filtering.
 .TP
-\fBdbus-system.own org.gnome.ghex.*
-Allow the application to own the name org.gnome.ghex and all names underneath in on the system DBus.
-.TP
-\fBdbus-system.talk org.freedesktop.Notifications
-Allow the application to talk to the name org.freedesktop.Notifications on the system DBus.
-.TP
-\fBdbus-system.see org.freedesktop.Notifications
-Allow the application to see but not talk to the name org.freedesktop.Notifications on the system DBus.
+\fBdbus-system.broadcast org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
+Allow the application to receive broadcast signals from the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the system DBus.
 .TP
 \fBdbus-system.call org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
 Allow the application to call methods of the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the system DBus.
 .TP
-\fBdbus-system.broadcast org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
-Allow the application to receive broadcast signals from the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the system DBus.
+\fBdbus-system.own org.gnome.ghex.*
+Allow the application to own the name org.gnome.ghex and all names underneath in on the system DBus.
+.TP
+\fBdbus-system.see org.freedesktop.Notifications
+Allow the application to see but not talk to the name org.freedesktop.Notifications on the system DBus.
+.TP
+\fBdbus-system.talk org.freedesktop.Notifications
+Allow the application to talk to the name org.freedesktop.Notifications on the system DBus.
 .TP
 \fBdbus-user filter
 Enable filtered access to the session DBus. Filters can be specified with the dbus-user.talk and dbus-user.own commands.
@@ -687,22 +729,22 @@ Enable filtered access to the session DBus. Filters can be specified with the db
 \fBdbus-user none
 Disable access to the session DBus. Once access is disabled, it cannot be relaxed to filtering.
 .TP
-\fBdbus-user.own org.gnome.ghex.*
-Allow the application to own the name org.gnome.ghex and all names underneath in on the session DBus.
-.TP
-\fBdbus-user.talk org.freedesktop.Notifications
-Allow the application to talk to the name org.freedesktop.Notifications on the session DBus.
-.TP
-\fBdbus-user.see org.freedesktop.Notifications
-Allow the application to see but not talk to the name org.freedesktop.Notifications on the session DBus.
+\fBdbus-user.broadcast org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
+Allow the application to receive broadcast signals from the the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the session DBus.
 .TP
 \fBdbus-user.call org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
 Allow the application to call methods of the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the session DBus.
 .TP
-\fBdbus-user.broadcast org.freedesktop.Notifications=org.freedesktop.Notifications.*@/org/freedesktop/Notifications
-Allow the application to receive broadcast signals from the the interface org.freedesktop.Notifications of the object exposed at the path /org/freedesktop/Notifications by the client owning the bus name org.freedesktop.Notifications on the session DBus.
+\fBdbus-user.own org.gnome.ghex.*
+Allow the application to own the name org.gnome.ghex and all names underneath in on the session DBus.
 .TP
-\fBnodbus \fR(deprecated)
+\fBdbus-user.see org.freedesktop.Notifications
+Allow the application to see but not talk to the name org.freedesktop.Notifications on the session DBus.
+.TP
+\fBdbus-user.talk org.freedesktop.Notifications
+Allow the application to talk to the name org.freedesktop.Notifications on the session DBus.
+.TP
+\fBnodbus\fR (deprecated)
 Disable D-Bus access (both system and session buses). Equivalent to dbus-system none and dbus-user none.
 .TP
 .br
@@ -802,7 +844,7 @@ name browser
 \fBno3d
 Disable 3D hardware acceleration.
 .TP
-\fBnoautopulse \fR(deprecated)
+\fBnoautopulse\fR (deprecated)
 See keep-config-pulse.
 .TP
 \fBnodvd
@@ -816,6 +858,9 @@ Disable input devices.
 .TP
 \fBnosound
 Disable sound system.
+.TP
+\fBnotpm
+Disable Trusted Platform Module (TPM) devices.
 .TP
 \fBnotv
 Disable DVB (Digital Video Broadcasting) TV devices.
@@ -862,20 +907,6 @@ net eth0
 ip 10.10.20.56
 
 .TP
-\fBip none
-No IP address and no default gateway are configured for the last interface
-defined by a net command. Use this option
-in case you intend to start an external DHCP client in the sandbox.
-.br
-
-.br
-Example:
-.br
-net eth0
-.br
-ip none
-
-.TP
 \fBip dhcp
 Acquire an IP address and default gateway for the last interface defined by a
 net command, as well as set the DNS servers according to the DHCP response.
@@ -901,6 +932,20 @@ The DHCP client will NOT release the DHCP lease when the sandbox terminates.
 If your DHCP server requires leases to be explicitly released, consider running
 a DHCP client and releasing the lease manually in conjunction with the
 net none command.
+
+.TP
+\fBip none
+No IP address and no default gateway are configured for the last interface
+defined by a net command. Use this option
+in case you intend to start an external DHCP client in the sandbox.
+.br
+
+.br
+Example:
+.br
+net eth0
+.br
+ip none
 
 .TP
 \fBip6 address

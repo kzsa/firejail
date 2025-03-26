@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Firejail Authors
+ * Copyright (C) 2014-2025 Firejail Authors
  *
  * This file is part of firejail project
  *
@@ -194,6 +194,7 @@ static int store_asoundrc(void) {
 	if (stat(src, &s) == 0) {
 		if (s.st_uid != getuid()) {
 			fwarning(".asoundrc is not owned by the current user, skipping...\n");
+			free(src);
 			return 0;
 		}
 

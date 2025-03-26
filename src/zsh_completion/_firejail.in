@@ -102,6 +102,7 @@ _firejail_args=(
     '--ipc-namespace[enable a new IPC namespace]'
     '--join-or-start=-[join the sandbox or start a new one name|pid]: :_all_firejails'
     '--keep-config-pulse[disable automatic ~/.config/pulse init]'
+    '--keep-dev-ntsync[/dev/ntsync character device is untouched (even with --private-dev)]'
     '--keep-dev-shm[/dev/shm directory is untouched (even with --private-dev)]'
     '--keep-fd[inherit open file descriptors to sandbox]: :'
     '--keep-shell-rc[do not copy shell rc files from /etc/skel]'
@@ -124,7 +125,6 @@ _firejail_args=(
     # many would enjoy getting a list from -20..20
     '--nice=-[set nice value]: :(1 10 15 20)'
     '--no3d[disable 3D hardware acceleration]'
-    '--noautopulse[disable automatic ~/.config/pulse init]'
     '--noblacklist=-[disable blacklist for file or directory]: :_files'
     '--nodbus[disable D-Bus access]'
     '--nodvd[disable DVD and audio CD devices]'
@@ -134,6 +134,7 @@ _firejail_args=(
     '--nonewprivs[sets the NO_NEW_PRIVS prctl]'
     '--noprinters[disable printers]'
     '--nosound[disable sound system]'
+    '--notpm[disable TPM devices]'
     '--nou2f[disable U2F devices]'
     '--novideo[disable video devices]'
     '--private[temporary home directory]'
